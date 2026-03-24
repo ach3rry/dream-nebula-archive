@@ -1,27 +1,9 @@
-"use client"
-
-import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { Starfield } from "@/components/starfield"
 import { DreamRecorder } from "@/components/dream-recorder"
 import { DreamFeed } from "@/components/dream-feed"
-import { DreamNebula } from "@/components/dream-nebula"
 
 export default function HomePage() {
-  const [showNebula, setShowNebula] = useState(false)
-  const [dreams, setDreams] = useState<any[]>([])
-
-  const handleOpenNebula = (fetchedDreams: any[]) => {
-    setDreams(fetchedDreams)
-    setShowNebula(true)
-  }
-
-  const handleDreamClick = (id: number) => {
-    setShowNebula(false)
-    window.location.href = `/dreams/${id}`
-  }
-
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Animated background gradient */}
@@ -73,8 +55,8 @@ export default function HomePage() {
           <div className="absolute w-3 h-3 rounded-full bg-primary shadow-[0_0_20px_rgba(0,245,255,0.5)]" />
         </div>
 
-        {/* Dream Feed with Nebula button */}
-        <DreamFeed onOpenNebula={handleOpenNebula} />
+        {/* Dream Feed */}
+        <DreamFeed />
 
         {/* Footer */}
         <footer className="relative z-10 py-12 border-t border-border/30">
@@ -88,15 +70,6 @@ export default function HomePage() {
           </div>
         </footer>
       </main>
-
-      {/* Dream Nebula Overlay */}
-      {showNebula && (
-        <DreamNebula
-          dreams={dreams}
-          onClose={() => setShowNebula(false)}
-          onDreamClick={handleDreamClick}
-        />
-      )}
     </div>
   )
 }

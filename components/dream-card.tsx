@@ -2,52 +2,29 @@
 
 import { cn } from "@/lib/utils"
 import { Calendar, Sparkles } from "lucide-react"
-import { useRouter } from "next/navigation"
 
-// 中文情感类型映射（后端返回）到图标的映射
-const emotionIcons: Record<string, { icon: string; label: string; color: string }> = {
-  "平静": { icon: "🌙", label: "平静", color: "text-blue-400" },
-  "CALM": { icon: "🌙", label: "平静", color: "text-blue-400" },
-  "愉悦": { icon: "✨", label: "愉悦", color: "text-primary" },
-  "JOYFUL": { icon: "✨", label: "愉悦", color: "text-primary" },
-  "忧郁": { icon: "🌫️", label: "忧郁", color: "text-purple-400" },
-  "MELANCHOLY": { icon: "🌫️", label: "忧郁", color: "text-purple-400" },
-  "悲伤": { icon: "💧", label: "悲伤", color: "text-blue-300" },
-  "SAD": { icon: "💧", label: "悲伤", color: "text-blue-300" },
-  "恐惧": { icon: "👁️", label: "恐惧", color: "text-red-400" },
-  "FEAR": { icon: "👁️", label: "恐惧", color: "text-red-400" },
-  "兴奋": { icon: "🚀", label: "兴奋", color: "text-yellow-400" },
-  "EXCITED": { icon: "🚀", label: "兴奋", color: "text-yellow-400" },
-  "焦虑": { icon: "⚡", label: "焦虑", color: "text-orange-400" },
-  "ANXIOUS": { icon: "⚡", label: "焦虑", color: "text-orange-400" },
-  // 兼容旧的英文 mood
-  mystical: { icon: "✨", label: "神秘", color: "text-primary" },
-  peaceful: { icon: "🌙", label: "宁静", color: "text-blue-400" },
-  adventurous: { icon: "🚀", label: "冒险", color: "text-secondary" },
-  surreal: { icon: "🌀", label: "超现实", color: "text-purple-400" },
-  emotional: { icon: "💫", label: "情感", color: "text-pink-400" },
+// Mood icons with neon colors
+const moodIcons: Record<string, { icon: string; color: string }> = {
+  mystical: { icon: "✨", color: "text-primary" },
+  peaceful: { icon: "🌙", color: "text-blue-400" },
+  adventurous: { icon: "🚀", color: "text-secondary" },
+  surreal: { icon: "🌀", color: "text-purple-400" },
+  emotional: { icon: "💫", color: "text-pink-400" },
 }
 
 interface DreamCardProps {
-  id: number
   title: string
   date: string
-  mood?: string
+  mood: keyof typeof moodIcons
   summary: string
   index?: number
 }
 
-export function DreamCard({ id, title, date, mood = "mystical", summary, index = 0 }: DreamCardProps) {
-  const router = useRouter()
-  const emotionData = emotionIcons[mood] || emotionIcons.mystical
-
-  const handleClick = () => {
-    router.push(`/dreams/${id}`)
-  }
+export function DreamCard({ title, date, mood, summary, index = 0 }: DreamCardProps) {
+  const moodData = moodIcons[mood] || moodIcons.mystical
 
   return (
     <article
-      onClick={handleClick}
       className={cn(
         "group relative p-6 rounded-2xl cursor-pointer",
         "glass-card",
@@ -82,7 +59,7 @@ export function DreamCard({ id, title, date, mood = "mystical", summary, index =
             </div>
           </div>
 
-          {/* Emotion indicator */}
+          {/* Mood indicator */}
           <div
             className={cn(
               "flex items-center justify-center w-12 h-12 rounded-xl",
@@ -90,10 +67,9 @@ export function DreamCard({ id, title, date, mood = "mystical", summary, index =
               "border border-primary/20 group-hover:border-primary/50",
               "transition-all duration-300"
             )}
-            title={`情感: ${emotionData.label}`}
           >
-            <span className="text-2xl" role="img" aria-label={emotionData.label}>
-              {emotionData.icon}
+            <span className="text-2xl" role="img" aria-label={mood}>
+              {moodData.icon}
             </span>
           </div>
         </div>
@@ -106,7 +82,7 @@ export function DreamCard({ id, title, date, mood = "mystical", summary, index =
         {/* Footer */}
         <div className="mt-4 flex items-center gap-2 text-sm">
           <Sparkles className="w-4 h-4 text-primary/60" />
-          <span className={cn("capitalize", emotionData.color)}>{emotionData.label}</span>
+          <span className={cn("capitalize", moodData.color)}>{mood}</span>
         </div>
       </div>
 
