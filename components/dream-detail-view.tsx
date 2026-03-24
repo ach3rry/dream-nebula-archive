@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState, use } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Calendar, Tag, ArrowLeft, Edit2, Trash2 } from "lucide-react"
 import { Loader2 } from "lucide-react"
 import { DreamInterpretation } from "./dream-interpretation"
@@ -31,10 +31,12 @@ interface Dream {
   updated_at: string
 }
 
-export function DreamDetailView() {
-  const params = use(useParams())
+interface DreamDetailViewProps {
+  dreamId: string
+}
+
+export function DreamDetailView({ dreamId }: DreamDetailViewProps) {
   const router = useRouter()
-  const dreamId = params.id as string
 
   const [dream, setDream] = useState<Dream | null>(null)
   const [loading, setLoading] = useState(true)
@@ -42,8 +44,6 @@ export function DreamDetailView() {
   const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
-    if (!dreamId) return
-
     const fetchDream = async () => {
       try {
         const response = await fetch(`/api/dreams/${dreamId}`)
@@ -65,9 +65,7 @@ export function DreamDetailView() {
       }
     }
 
-    if (dreamId) {
-      fetchDream()
-    }
+    fetchDream()
   }, [dreamId])
 
   const handleDelete = async () => {

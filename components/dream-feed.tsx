@@ -136,7 +136,13 @@ export function DreamFeed({ onOpenNebula }: DreamFeedProps) {
   }
 
   // Map backend dream data to display format
-  const displayDreams = filteredDreams.length > 0
+  const displayDreams: Array<{
+    id: number
+    title: string
+    date: string
+    mood: string
+    summary: string
+  }> = filteredDreams.length > 0
     ? filteredDreams.map((dream) => ({
         id: dream.id,
         title: generateDreamTitle(dream.content),
@@ -144,7 +150,13 @@ export function DreamFeed({ onOpenNebula }: DreamFeedProps) {
         mood: dream.emotion?.type || "mystical",
         summary: dream.content.slice(0, 100) + (dream.content.length > 100 ? "..." : ""),
       }))
-    : dreams.length === 0 ? sampleDreams.map(dream => ({ ...dream, id: dream.id })) : []
+    : dreams.length === 0 ? sampleDreams.map(dream => ({
+        id: dream.id,
+        title: dream.title,
+        date: dream.date,
+        mood: dream.mood,
+        summary: dream.summary
+      })) : []
 
   // 清除筛选
   const clearFilters = () => {
@@ -469,6 +481,7 @@ export function DreamFeed({ onOpenNebula }: DreamFeedProps) {
           {displayDreams.map((dream, index) => (
             <DreamCard
               key={dream.id}
+              id={dream.id}
               title={dream.title}
               date={dream.date}
               mood={dream.mood}

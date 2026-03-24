@@ -14,6 +14,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default function DreamDetailPage({ params }: PageProps) {
-  return <DreamDetailView />
+export default async function DreamDetailPage({ params }: PageProps) {
+  const { id } = await params
+  return <DreamDetailView dreamId={id} />
 }

@@ -38,10 +38,70 @@ const emotionGlowColors: Record<string, string> = {
   "焦虑": "rgba(251, 146, 60, 0.4)",  // orange glow
 }
 
+// 星云背景主题配置
+const nebulaThemes: Record<string, {
+  primaryColors: string[]
+  secondaryColors: string[]
+  accentColor: string
+  density: number
+  flowSpeed: number
+}> = {
+  "平静": {
+    primaryColors: ["#1e3a5f", "#0f2744", "#1a365d"],
+    secondaryColors: ["#60a5fa", "#3b82f6", "#2563eb"],
+    accentColor: "#93c5fd",
+    density: 0.6,
+    flowSpeed: 0.3
+  },
+  "愉悦": {
+    primaryColors: ["#4c1d95", "#3b0d7a", "#5b21b6"],
+    secondaryColors: ["#c084fc", "#a855f7", "#9333ea"],
+    accentColor: "#d8b4fe",
+    density: 0.8,
+    flowSpeed: 0.5
+  },
+  "忧郁": {
+    primaryColors: ["#372160", "#2d1b4e", "#4c2882"],
+    secondaryColors: ["#a78bfa", "#8b5cf6", "#7c3aed"],
+    accentColor: "#c4b5fd",
+    density: 0.7,
+    flowSpeed: 0.35
+  },
+  "悲伤": {
+    primaryColors: ["#1e3a5f", "#1e40af", "#1d4ed8"],
+    secondaryColors: ["#93c5fd", "#60a5fa", "#3b82f6"],
+    accentColor: "#bfdbfe",
+    density: 0.5,
+    flowSpeed: 0.25
+  },
+  "恐惧": {
+    primaryColors: ["#450a0a", "#7f1d1d", "#991b1b"],
+    secondaryColors: ["#f87171", "#ef4444", "#dc2626"],
+    accentColor: "#fca5a5",
+    density: 0.9,
+    flowSpeed: 0.7
+  },
+  "兴奋": {
+    primaryColors: ["#78350f", "#92400e", "#a16207"],
+    secondaryColors: ["#fbbf24", "#f59e0b", "#d97706"],
+    accentColor: "#fcd34d",
+    density: 0.85,
+    flowSpeed: 0.6
+  },
+  "焦虑": {
+    primaryColors: ["#7c2d12", "#9a3412", "#c2410c"],
+    secondaryColors: ["#fb923c", "#f97316", "#ea580c"],
+    accentColor: "#fdba74",
+    density: 0.95,
+    flowSpeed: 0.8
+  }
+}
+
 export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [hoveredDream, setHoveredDream] = useState<number | null>(null)
-  const animationRef = useRef<number>()
+  const [dominantEmotion, setDominantEmotion] = useState<string>("平静")
+  const animationRef = useRef<number | undefined>(undefined)
 
   // 使用 ref 跟踪当前粒子数据，用于悬停检测
   const particlesRef = useRef<any[]>([])
@@ -133,6 +193,45 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
       })
     }
 
+    // 计算主要情感类型用于星云主题
+    const emotionCounts: Record<string, number> = {}
+    dreams.forEach(dream => {
+      const emotion = dream.emotion?.type || "平静"
+      emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1
+    })
+    const calculatedDominantEmotion = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "平静"
+    setDominantEmotion(calculatedDominantEmotion)
+    const nebulaTheme = nebulaThemes[calculatedDominantEmotion] || nebulaThemes["平静"]
+
+    // 程序化星云云雾
+    const nebulaClouds: Array<{
+      x: number
+      y: number
+      radius: number
+      color: string
+      alpha: number
+      vx: number
+      vy: number
+      phase: number
+    }> = []
+
+    // 根据主题密度创建云雾
+    const cloudCount = Math.floor(15 * nebulaTheme.density)
+    for (let i = 0; i < cloudCount; i++) {
+      const isPrimary = i % 3 === 0
+      const colors = isPrimary ? nebulaTheme.primaryColors : nebulaTheme.secondaryColors
+      nebulaClouds.push({
+        x: Math.random() * canvas.width * 1.5 - canvas.width * 0.75,
+        y: Math.random() * canvas.height * 1.5 - canvas.height * 0.75,
+        radius: 150 + Math.random() * 300,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        alpha: 0.02 + Math.random() * 0.04,
+        vx: (Math.random() - 0.5) * nebulaTheme.flowSpeed,
+        vy: (Math.random() - 0.5) * nebulaTheme.flowSpeed,
+        phase: Math.random() * Math.PI * 2
+      })
+    }
+
     let mouseX = 0
     let mouseY = 0
     let targetRotationX = 0
@@ -159,13 +258,14 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
       const fov = 400
       const scale = fov / (fov + z)
       return {
-        x: x * scale + canvas.width / 2,
-        y: y * scale + canvas.height / 2,
+        x: x * scale + (canvas?.width || 0) / 2,
+        y: y * scale + (canvas?.height || 0) / 2,
         scale
       }
     }
 
     function handleClick(e: MouseEvent) {
+      if (!canvas) return
       const rect = canvas.getBoundingClientRect()
       const clickX = e.clientX - rect.left
       const clickY = e.clientY - rect.top
@@ -184,8 +284,66 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
     }
 
     function animate() {
-      ctx.fillStyle = "rgba(3, 7, 18, 0.1)"
+      if (!ctx || !canvas) return
+
+      // 绘制渐变背景
+      const bgGradient = ctx.createRadialGradient(
+        canvas.width / 2, canvas.height / 2, 0,
+        canvas.width / 2, canvas.height / 2, canvas.width * 0.7
+      )
+      bgGradient.addColorStop(0, nebulaTheme.primaryColors[0] + "40")
+      bgGradient.addColorStop(0.5, nebulaTheme.primaryColors[1] + "20")
+      bgGradient.addColorStop(1, "#030712")
+      ctx.fillStyle = bgGradient
       ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      // 绘制程序化星云云雾
+      const time = Date.now() * 0.001
+      nebulaClouds.forEach(cloud => {
+        // 更新云雾位置
+        cloud.x += cloud.vx
+        cloud.y += cloud.vy
+        cloud.phase += 0.01
+
+        // 边界检查，循环移动
+        if (cloud.x < -canvas.width * 0.5) cloud.x = canvas.width * 0.5
+        if (cloud.x > canvas.width * 0.5) cloud.x = -canvas.width * 0.5
+        if (cloud.y < -canvas.height * 0.5) cloud.y = canvas.height * 0.5
+        if (cloud.y > canvas.height * 0.5) cloud.y = -canvas.height * 0.5
+
+        // 呼吸效果
+        const breathingAlpha = cloud.alpha + Math.sin(cloud.phase) * 0.01
+
+        // 绘制云雾
+        const gradient = ctx.createRadialGradient(
+          canvas.width / 2 + cloud.x,
+          canvas.height / 2 + cloud.y,
+          0,
+          canvas.width / 2 + cloud.x,
+          canvas.height / 2 + cloud.y,
+          cloud.radius
+        )
+        gradient.addColorStop(0, cloud.color + Math.floor(breathingAlpha * 255).toString(16).padStart(2, '0'))
+        gradient.addColorStop(0.5, cloud.color + Math.floor(breathingAlpha * 0.5 * 255).toString(16).padStart(2, '0'))
+        gradient.addColorStop(1, "transparent")
+
+        ctx.fillStyle = gradient
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+      })
+
+      // 绘制高光点缀
+      nebulaClouds.forEach((cloud, i) => {
+        if (i % 3 === 0) {
+          const sparkleX = canvas.width / 2 + cloud.x + Math.cos(time + cloud.phase) * cloud.radius * 0.5
+          const sparkleY = canvas.height / 2 + cloud.y + Math.sin(time + cloud.phase) * cloud.radius * 0.5
+          const sparkleAlpha = (Math.sin(time * 2 + cloud.phase) + 1) * 0.5 * 0.3
+
+          ctx.beginPath()
+          ctx.arc(sparkleX, sparkleY, 2, 0, Math.PI * 2)
+          ctx.fillStyle = nebulaTheme.accentColor + Math.floor(sparkleAlpha * 255).toString(16).padStart(2, '0')
+          ctx.fill()
+        }
+      })
 
       // 悬停检测 - 跟踪鼠标位置
       let foundHover = false
@@ -402,9 +560,19 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
       </button>
 
       {/* 提示文字 */}
-      <div className="absolute top-6 left-6 text-white/60 text-sm">
-        <p>✨ 梦境星云</p>
-        <p className="text-xs mt-1">拖动鼠标旋转视角 • 点击梦境查看详情</p>
+      <div className="absolute top-6 left-6 text-white/80 text-sm space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">✨</span>
+          <span className="font-semibold">梦境星云</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs">
+          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20">
+            {dominantEmotion}主题
+          </span>
+          <span className="text-white/50">•</span>
+          <span className="text-white/60">{dreams.length}个梦境</span>
+        </div>
+        <p className="text-xs text-white/50 mt-1">拖动鼠标旋转 • 滚轮缩放 • 点击查看详情</p>
       </div>
 
       {/* 画布 */}

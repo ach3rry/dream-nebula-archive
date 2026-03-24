@@ -131,11 +131,9 @@ export function DreamExport({
 
       // 使用 html2canvas 捕获
       const canvas = await html2canvas(container, {
-        backgroundColor: "#1a1a2e",
-        scale: 2, // 高清导出
         logging: false,
         useCORS: true
-      })
+      } as any)
 
       // 转换为图片并下载
       canvas.toBlob((blob) => {
