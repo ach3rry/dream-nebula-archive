@@ -44,3 +44,21 @@ dist-ssr/
 *.tmp
 *.temp
 .cache/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+.vercel/
+*.tsbuildinfo
+
+# 开发文档（可选提交）
+SESSION_SUMMARY_*.md
+TONIGHT.md
+TROUBLESHOOTING.md
+
+# 旧版代码
+frontend/
+
+# 测试文件
+backend/test_*.py

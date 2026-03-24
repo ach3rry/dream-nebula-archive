@@ -2,14 +2,63 @@
 
 import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
-import { Sparkles, Wand2 } from "lucide-react"
+import { Sparkles, Wand2, Loader2 } from "lucide-react"
+
+interface Dream {
+  id: number
+  content: string
+  emotion?: string
+  created_at: string
+}
 
 export function DreamRecorder() {
   const [dreamText, setDreamText] = useState("")
   const [isHovering, setIsHovering] = useState(false)
   const [sparkles, setSparkles] = useState<{ id: number; x: number; y: number }[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<{ type: "success" | "error" | null; message: string }>({
+    type: null,
+    message: "",
+  })
   const buttonRef = useRef<HTMLButtonElement>(null)
   const sparkleIdRef = useRef(0)
+
+  const handleSubmit = async () => {
+    if (!dreamText.trim()) return
+
+    setIsSubmitting(true)
+    setSubmitStatus({ type: null, message: "" })
+
+    try {
+      const response = await fetch("/api/dreams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: dreamText }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to save dream")
+      }
+
+      const data: Dream = await response.json()
+      setSubmitStatus({
+        type: "success",
+        message: `梦境已记录！ID: ${data.id}`,
+      })
+      setDreamText("")
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSubmitStatus({ type: null, message: "" }), 3000)
+    } catch (error) {
+      setSubmitStatus({
+        type: "error",
+        message: "保存失败，请稍后重试",
+      })
+      setTimeout(() => setSubmitStatus({ type: null, message: "" }), 3000)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   // Generate sparkles on hover
   useEffect(() => {
@@ -88,12 +137,13 @@ export function DreamRecorder() {
       </div>
 
       {/* Manifest Button */}
-      <div className="mt-8 flex justify-center">
+      <div className="mt-8 flex flex-col items-center gap-4">
         <button
           ref={buttonRef}
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
-          disabled={!dreamText.trim()}
+          onClick={handleSubmit}
+          disabled={!dreamText.trim() || isSubmitting}
           className={cn(
             "relative px-10 py-4 rounded-full font-semibold text-lg",
             "bg-gradient-to-r from-primary/20 to-secondary/20",
@@ -121,9 +171,18 @@ export function DreamRecorder() {
 
           {/* Button content */}
           <span className="relative flex items-center gap-3">
-            <Wand2 className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
-            <span>Manifest</span>
-            <Sparkles className="w-5 h-5 group-hover:animate-pulse" />
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Manifesting...</span>
+              </>
+            ) : (
+              <>
+                <Wand2 className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+                <span>Manifest</span>
+                <Sparkles className="w-5 h-5 group-hover:animate-pulse" />
+              </>
+            )}
           </span>
 
           {/* Hover glow overlay */}
@@ -134,6 +193,20 @@ export function DreamRecorder() {
             )}
           />
         </button>
+
+        {/* Status message */}
+        {submitStatus.type && (
+          <div
+            className={cn(
+              "text-sm px-4 py-2 rounded-lg",
+              submitStatus.type === "success"
+                ? "bg-primary/20 text-primary border border-primary/30"
+                : "bg-red-500/20 text-red-400 border border-red-500/30"
+            )}
+          >
+            {submitStatus.message}
+          </div>
+        )}
       </div>
 
       {/* Character count */}
