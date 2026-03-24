@@ -78,9 +78,10 @@ async def root():
 
 
 # 路由注册
-from api import dreams
+from api import dreams, interpretation
 
 app.include_router(dreams.router)
+app.include_router(interpretation.router)
 # TODO: 添加其他路由
 # from api import analysis, search
 # app.include_router(analysis.router, prefix="/api/analysis", tags=["AI 分析"])

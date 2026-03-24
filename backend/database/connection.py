@@ -85,38 +85,35 @@ def get_connection_pool():
             _pool.release(conn)
 
             if result and result[0] == 1:
-                print(f"✅ YashanDB 连接池创建成功！")
-                print(f"   主机: {config.host}:{config.port}")
-                print(f"   用户: {config.user}")
+                print(f"[OK] YashanDB connection pool created!")
+                print(f"   Host: {config.host}:{config.port}")
+                print(f"   User: {config.user}")
                 return _pool
             else:
-                raise Exception("数据库连接测试失败")
+                raise Exception("Database connection test failed")
 
         except ImportError as e:
-            print(f"❌ yaspy 驱动未安装！")
-            print(f"   请使用 /yashandb-python 技能安装驱动")
-            print(f"   错误: {e}")
+            print(f"[ERROR] yaspy driver not installed!")
+            print(f"   Please install the driver using /yashandb-python")
+            print(f"   Error: {e}")
             raise
 
         except Exception as e:
-            print(f"❌ YashanDB 连接失败！")
-            print(f"   请检查数据库是否运行，配置是否正确")
-            print(f"   错误: {e}")
+            print(f"[ERROR] YashanDB connection failed!")
+            print(f"   Please check if database is running and config is correct")
+            print(f"   Error: {e}")
             raise
 
     return _pool
 
 
-def get_connection():
-    """
-    获取数据库连接（用于依赖注入）
-    """
-    pool = get_connection_pool()
-    conn = pool.acquire()
-    try:
-        yield conn
-    finally:
-        pool.release(conn)
+# def get_connection():
+    # DISABLED - Use direct connection instead
+    pass
+
+def get_config():
+    """获取数据库配置对象"""
+    return YashanDBConfig()
 
 
 def close_connection_pool():
