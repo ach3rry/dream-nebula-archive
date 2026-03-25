@@ -2,7 +2,7 @@
 
 import { DreamCard } from "./dream-card"
 import { useState, useEffect } from "react"
-import { fetchDreams } from "@/lib/api-client"
+import { fetchDreams, type Dream } from "@/lib/api-client"
 
 // 情感类型映射 - 更准确的情感分类
 const emotionMoodMap: Record<string, string> = {
@@ -13,13 +13,6 @@ const emotionMoodMap: Record<string, string> = {
   "恐惧": "surreal",
   "焦虑": "surreal",
   "忧郁": "emotional",
-}
-
-interface Dream {
-  id: number
-  content: string
-  emotion: { type: string } | null
-  created_at: string
 }
 
 interface FeedDream {
