@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # YashanDB 数据库
+  yashandb:
+    image: docker.1ms.run/yasdb/yashandb:23.4.7.100
+    container_name: yashandb
+    ports:
+      - "1688:1688"
+    environment:
+      - SYS_PASSWD=Cod-2022
+    volumes:
+      - yashan_data:/data/yashan
+      - yashan_yasboot:/home/yashan/.yasboot
+    restart: unless-stopped
+    networks:
+      - dream-nebula-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "1688"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # FastAPI 后端
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dream-nebula-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - YASHANDB_HOST=yashandb
+      - YASHANDB_PORT=1688
+      - YASHANDB_USER=system
+      - YASHANDB_PASSWORD=Cod-2022
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+    depends_on:
+      yashandb:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - dream-nebula-network
+    volumes:
+      - ./backend:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Nginx 反向代理 (可选)
+  nginx:
+    image: nginx:alpine
+    container_name: dream-nebula-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - dream-nebula-network
+
+volumes:
+  yashan_data:
+  yashan_yasboot:
+
+networks:
+  dream-nebula-network:
+    driver: bridge
