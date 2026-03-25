@@ -2,12 +2,17 @@
 
 import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
-import { Sparkles, Wand2 } from "lucide-react"
+import { Sparkles, Wand2, Loader2, CheckCircle2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export function DreamRecorder() {
+  const router = useRouter()
   const [dreamText, setDreamText] = useState("")
   const [isHovering, setIsHovering] = useState(false)
   const [sparkles, setSparkles] = useState<{ id: number; x: number; y: number }[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const sparkleIdRef = useRef(0)
 
@@ -38,6 +43,50 @@ export function DreamRecorder() {
     return () => clearTimeout(timeout)
   }, [sparkles])
 
+  const handleSubmit = async () => {
+    if (!dreamText.trim() || isSubmitting) return
+
+    setIsSubmitting(true)
+    setErrorMessage(null)
+    setSubmitSuccess(false)
+
+    try {
+      const response = await fetch("/api/dreams", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: dreamText.trim(),
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.details || "创建梦境失败")
+      }
+
+      const data = await response.json()
+
+      // Success!
+      setSubmitSuccess(true)
+      setDreamText("")
+
+      // Reset success message after 3 seconds
+      setTimeout(() => {
+        setSubmitSuccess(false)
+      }, 3000)
+
+      // Refresh the page to show new dream
+      router.refresh()
+    } catch (err) {
+      console.error("Error creating dream:", err)
+      setErrorMessage(err instanceof Error ? err.message : "创建梦境失败，请稍后重试")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <section className="w-full max-w-3xl mx-auto px-4">
       <div className="text-center mb-8">
@@ -50,6 +99,21 @@ export function DreamRecorder() {
           在这里记录你的梦境，让它们化作星云中的光芒
         </p>
       </div>
+
+      {/* Success Message */}
+      {submitSuccess && (
+        <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-3 animate-fade-in">
+          <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
+          <p className="text-green-300">梦境已成功记录！AI 正在分析情感...</p>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-3 animate-fade-in">
+          <p className="text-red-300">{errorMessage}</p>
+        </div>
+      )}
 
       {/* Dream Input Area */}
       <div className="relative group">
@@ -74,9 +138,16 @@ export function DreamRecorder() {
               "border border-transparent",
               "focus:outline-none focus:ring-0",
               "text-lg leading-relaxed",
-              "transition-all duration-300"
+              "transition-all duration-300",
+              "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
             aria-label="梦境输入区域"
+            disabled={isSubmitting}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                handleSubmit()
+              }
+            }}
           />
         </div>
 
@@ -93,7 +164,8 @@ export function DreamRecorder() {
           ref={buttonRef}
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
-          disabled={!dreamText.trim()}
+          disabled={!dreamText.trim() || isSubmitting}
+          onClick={handleSubmit}
           className={cn(
             "relative px-10 py-4 rounded-full font-semibold text-lg",
             "bg-gradient-to-r from-primary/20 to-secondary/20",
@@ -121,9 +193,18 @@ export function DreamRecorder() {
 
           {/* Button content */}
           <span className="relative flex items-center gap-3">
-            <Wand2 className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
-            <span>Manifest</span>
-            <Sparkles className="w-5 h-5 group-hover:animate-pulse" />
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>记录中...</span>
+              </>
+            ) : (
+              <>
+                <Wand2 className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+                <span>Manifest</span>
+                <Sparkles className="w-5 h-5 group-hover:animate-pulse" />
+              </>
+            )}
           </span>
 
           {/* Hover glow overlay */}
@@ -136,12 +217,17 @@ export function DreamRecorder() {
         </button>
       </div>
 
-      {/* Character count */}
-      <div className="mt-4 text-center text-sm text-muted-foreground">
-        <span className={dreamText.length > 0 ? "text-primary" : ""}>
-          {dreamText.length}
-        </span>
-        <span> / 2000 字符</span>
+      {/* Character count and hint */}
+      <div className="mt-4 text-center text-sm text-muted-foreground space-y-1">
+        <div>
+          <span className={dreamText.length > 0 ? "text-primary" : ""}>
+            {dreamText.length}
+          </span>
+          <span> / 2000 字符</span>
+        </div>
+        {dreamText.length > 0 && (
+          <p className="text-xs opacity-60">提示: 按 Ctrl+Enter 快速提交</p>
+        )}
       </div>
     </section>
   )

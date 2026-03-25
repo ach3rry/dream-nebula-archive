@@ -2,17 +2,19 @@
 
 import { cn } from "@/lib/utils"
 import { Calendar, Sparkles } from "lucide-react"
+import { useRouter } from "next/navigation"
 
-// Mood icons with neon colors
+// Mood icons with neon colors - 扩展情感图标
 const moodIcons: Record<string, { icon: string; color: string }> = {
   mystical: { icon: "✨", color: "text-primary" },
   peaceful: { icon: "🌙", color: "text-blue-400" },
   adventurous: { icon: "🚀", color: "text-secondary" },
   surreal: { icon: "🌀", color: "text-purple-400" },
-  emotional: { icon: "💫", color: "text-pink-400" },
+  emotional: { icon: "💧", color: "text-pink-400" },
 }
 
 interface DreamCardProps {
+  id: number
   title: string
   date: string
   mood: keyof typeof moodIcons
@@ -20,11 +22,13 @@ interface DreamCardProps {
   index?: number
 }
 
-export function DreamCard({ title, date, mood, summary, index = 0 }: DreamCardProps) {
+export function DreamCard({ id, title, date, mood, summary, index = 0 }: DreamCardProps) {
+  const router = useRouter()
   const moodData = moodIcons[mood] || moodIcons.mystical
 
   return (
     <article
+      onClick={() => router.push(`/dreams/${id}`)}
       className={cn(
         "group relative p-6 rounded-2xl cursor-pointer",
         "glass-card",

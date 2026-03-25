@@ -16,11 +16,13 @@
 
 | 特性 | 描述 |
 |------|------|
-| 🌟 **3D 梦境星云** | Three.js 渲染的 1500+ 粒子星空，每颗星星代表一个梦境 |
-| 🎨 **程序化星云** | 根据情感和关键词生成独特的星云背景图 |
+| 🌟 **3D 梦境星云** | Canvas 渲染的动态星空，每颗星星代表一个梦境 |
+| 🎨 **程序化星云** | 根据情感生成独特的星云背景图 |
 | 🤖 **AI 情感分析** | DeepSeek AI 驱动的情感分类和解梦报告 |
 | 💾 **YashanDB 存储** | 使用 YashanDB 存储梦境数据，展示连接池和事务处理 |
-| 🌊 **沉浸式交互** | 粒子坍缩、穿越动画、烟雾效果等创新交互 |
+| 📄 **PDF/图片导出** | 生成精美的梦境分析报告 |
+| 🌊 **沉浸式交互** | 果冻质感 UI、动画渐变、创新交互体验 |
+| 🚀 **静态 Demo** | 无需后端即可体验的演示版本 |
 
 ---
 
@@ -28,8 +30,8 @@
 
 ```
 ┌─────────────────────────────────────────────┐
-│              前端层 (Vue3)                   │
-│  Three.js + TailwindCSS + Vite              │
+│              前端层 (Next.js)                │
+│  React + TailwindCSS + Turbopack            │
 └─────────────────────────────────────────────┘
                       ↓
 ┌─────────────────────────────────────────────┐
@@ -47,43 +49,12 @@
 
 | 层级 | 技术 | 说明 |
 |------|------|------|
-| **前端** | Vue 3 + Vite | 现代化前端框架 |
-| **3D 渲染** | Three.js | 粒子星空效果 |
-| **样式** | TailwindCSS | 快速构建梦幻风格 |
+| **前端** | Next.js 15.5 + React 19 | 现代化全栈框架 |
+| **样式** | TailwindCSS 4 | 快速构建梦幻风格 |
+| **3D 渲染** | Canvas API | 动态星空效果 |
 | **后端** | FastAPI | Python 异步框架 |
 | **数据库** | YashanDB | 参赛核心要求 |
 | **AI 服务** | DeepSeek API | 情感分析 + 解梦 |
-| **部署** | Docker Compose | 一键启动 |
-
----
-
-## 项目结构
-
-```
-dream-nebula-archive/
-├── backend/                    # FastAPI 后端
-│   ├── main.py
-│   ├── requirements.txt
-│   ├── database/
-│   │   ├── connection.py       # YashanDB 连接池
-│   │   ├── models.py           # Pydantic 模型
-│   │   └── migrations.sql      # 建表脚本
-│   ├── api/                    # API 路由
-│   └── services/               # 业务逻辑
-│
-├── frontend/                   # Vue3 前端
-│   ├── src/
-│   │   ├── views/              # 页面组件
-│   │   ├── components/         # 公共组件
-│   │   ├── threejs/            # Three.js 模块
-│   │   └── api/                # API 调用
-│   └── package.json
-│
-├── docker/
-│   └── docker-compose.yml      # 一键启动
-│
-└── docs/                       # 文档
-```
 
 ---
 
@@ -93,17 +64,38 @@ dream-nebula-archive/
 
 - Python 3.9+
 - Node.js 18+
-- Docker Desktop
-- DeepSeek API Key
+- YashanDB (本地或 Docker)
 
-### 1. 克隆项目
+### 方式一：运行静态 Demo（推荐用于体验）
 
 ```bash
-git clone https://github.com/ach3rry/dream-nebula-archive.git
-cd dream-nebula-archive
+# 安装依赖
+npm install
+
+# 启动 Demo 模式（无需后端）
+npm run dev:demo
+
+# 访问 http://localhost:3000
 ```
 
-### 2. 启动 YashanDB
+Demo 模式使用预置的 mock 数据，无需配置后端和数据库即可体验完整功能。
+
+### 方式二：完整版（需要 YashanDB + DeepSeek API）
+
+#### 1. 配置环境变量
+
+```bash
+# 前端
+cp .env.example .env.local
+# 确保 NEXT_PUBLIC_DEMO_MODE=false
+
+# 后端
+cd backend
+cp .env.example .env
+# 配置 DeepSeek API 密钥
+```
+
+#### 2. 启动 YashanDB
 
 ```bash
 docker run -d \
@@ -115,34 +107,46 @@ docker run -d \
   docker.1ms.run/yasdb/yashandb:23.4.7.100
 ```
 
-### 3. 安装 YashanDB Python 驱动
+#### 3. 安装 YashanDB Python 驱动
 
 ```bash
-# 使用 Claude Code 技能
-/yashandb-python
+# 安装 C 驱动
+# 下载: https://download.yashandb.com
+# 或使用 yashandb-c 技能
+
+# 安装 Python 驱动
+pip install yaspy-xx.xx.whl
 ```
 
-### 4. 启动后端
+#### 4. 启动后端
 
 ```bash
 cd backend
 pip install -r requirements.txt
-cp .env.example .env  # 配置 API 密钥
 python main.py
 ```
 
-### 5. 启动前端
+#### 5. 启动前端
 
 ```bash
-cd frontend
-npm install
 npm run dev
 ```
 
-### 6. 访问应用
+#### 6. 访问应用
 
-- 前端: http://localhost:5173
+- 前端: http://localhost:3000
 - 后端 API: http://localhost:8000/docs
+
+---
+
+## 部署到 Vercel
+
+Demo 版本可以一键部署到 Vercel：
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ach3rry/dream-nebula-archive&env=NEXT_PUBLIC_DEMO_MODE=true)
+
+部署后设置环境变量：
+- `NEXT_PUBLIC_DEMO_MODE=true`
 
 ---
 
@@ -192,31 +196,100 @@ CREATE SEQUENCE seq_dream_records START WITH 1 INCREMENT BY 1;
 
 ---
 
+## 项目结构
+
+```
+dream-nebula-archive/
+├── app/                        # Next.js App Router
+│   ├── page.tsx               # 首页
+│   ├── layout.tsx             # 布局
+│   ├── dreams/
+│   │   └── [id]/
+│   │       └── page.tsx       # 梦境详情页
+│   └── api/                   # API 路由代理
+│
+├── components/                 # React 组件
+│   ├── dream-recorder.tsx     # 梦境记录
+│   ├── dream-feed.tsx         # 梦境列表
+│   ├── dream-card.tsx         # 梦境卡片
+│   ├── dream-detail-view.tsx  # 梦境详情
+│   ├── dream-interpretation.tsx # AI 解梦
+│   ├── dream-export.tsx       # PDF/图片导出
+│   ├── starfield.tsx          # 星空背景
+│   └── navbar.tsx             # 导航栏
+│
+├── lib/                        # 工具库
+│   ├── api-client.ts          # API 客户端（支持 Demo 模式）
+│   └── mock-data.ts           # Mock 数据
+│
+├── backend/                    # FastAPI 后端
+│   ├── main.py
+│   ├── requirements.txt
+│   ├── database/
+│   │   ├── connection.py       # YashanDB 连接池
+│   │   └── migrations.sql      # 建表脚本
+│   ├── api/                    # API 路由
+│   └── services/               # 业务逻辑
+│
+├── .env.demo                   # Demo 模式配置
+├── .env.local                  # 本地环境变量
+└── package.json
+```
+
+---
+
 ## 功能演示
 
 ### 1. 捕梦台
 
 - 碎片化输入梦境内容
-- 实时粒子反馈效果
-- 量子坍缩"大爆炸"动画
+- 实时 AI 情感分析
+- 美观的输入界面
 
-### 2. 梦境星云
+### 2. 梦境档案
 
-- 1500+ 动态粒子星空
-- 情感聚类星云团
-- 鼠标悬停显示关键词
+- 卡片式梦境列表
+- 情感标签分类
+- 快速浏览和筛选
 
-### 3. 记忆潜入
+### 3. 梦境详情
 
-- 镜头推进穿越效果
-- 程序化星云背景
-- AI 解梦烟雾浮现
+- 完整的梦境内容展示
+- 关键词标签
+- 编辑和删除功能
 
-### 4. 赛博周公
+### 4. 赛博周公解梦
 
 - DeepSeek AI 情感分析
 - 心理学风格解梦报告
-- 心理天气预报
+- 心灵天气预报
+- 象征符号解读
+
+### 5. 报告导出
+
+- PDF 格式报告
+- 高清图片导出
+- 包含完整梦境和分析
+
+---
+
+## Demo 模式说明
+
+Demo 模式特点：
+- ✅ 无需后端和数据库
+- ✅ 8 个预置梦境样本
+- ✅ 完整的 AI 分析模拟
+- ✅ 所有交互功能可用
+- ✅ 可直接部署到 Vercel
+
+切换模式：
+```bash
+# Demo 模式
+NEXT_PUBLIC_DEMO_MODE=true npm run dev
+
+# 完整模式
+NEXT_PUBLIC_DEMO_MODE=false npm run dev
+```
 
 ---
 

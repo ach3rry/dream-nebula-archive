@@ -6,6 +6,8 @@ import { Calendar, Tag, ArrowLeft, Edit2, Trash2 } from "lucide-react"
 import { Loader2 } from "lucide-react"
 import { DreamInterpretation } from "./dream-interpretation"
 import { DreamExport } from "./dream-export"
+import { DreamEditDialog } from "./dream-edit-dialog"
+import { fetchDream, deleteDream as apiDeleteDream } from "@/lib/api-client"
 
 const emotionIcons: Record<string, { icon: string; label: string; color: string; bgGradient: string }> = {
   "平静": { icon: "🌙", label: "平静", color: "text-blue-400", bgGradient: "from-blue-500/20 to-purple-500/20" },
@@ -42,20 +44,16 @@ export function DreamDetailView({ dreamId }: DreamDetailViewProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
   useEffect(() => {
-    const fetchDream = async () => {
+    const loadDream = async () => {
       try {
-        const response = await fetch(`/api/dreams/${dreamId}`)
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError("梦境不存在")
-          } else {
-            setError("加载失败")
-          }
+        const data = await fetchDream(parseInt(dreamId))
+        if (!data) {
+          setError("梦境不存在")
           return
         }
-        const data: Dream = await response.json()
         setDream(data)
       } catch (err) {
         console.error("Error fetching dream:", err)
@@ -65,7 +63,7 @@ export function DreamDetailView({ dreamId }: DreamDetailViewProps) {
       }
     }
 
-    fetchDream()
+    loadDream()
   }, [dreamId])
 
   const handleDelete = async () => {
@@ -73,13 +71,19 @@ export function DreamDetailView({ dreamId }: DreamDetailViewProps) {
 
     setDeleting(true)
     try {
-      const response = await fetch(`/api/dreams/${dreamId}`, { method: "DELETE" })
-      if (!response.ok) throw new Error("删除失败")
+      const success = await apiDeleteDream(parseInt(dreamId))
+      if (!success) throw new Error("删除失败")
       router.push("/")
     } catch (err) {
       alert("删除失败: " + (err instanceof Error ? err.message : "Unknown error"))
     } finally {
       setDeleting(false)
+    }
+  }
+
+  const handleDreamUpdate = (updatedContent: string) => {
+    if (dream) {
+      setDream({ ...dream, content: updatedContent })
     }
   }
 
@@ -123,110 +127,138 @@ export function DreamDetailView({ dreamId }: DreamDetailViewProps) {
 
   return (
     <div className="min-h-screen py-12 px-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent pointer-events-none" />
+      {/* Animated background gradient - 和主页一样的星空背景 */}
+      <div
+        className="fixed inset-0 bg-gradient-to-br from-nebula-deep via-nebula-purple to-nebula-blue animate-nebula"
+        aria-hidden="true"
+      />
+
+      {/* 星云光晕效果 - 和主页一样 */}
+      <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/10 rounded-full blur-[120px]" />
+        <div className="absolute -top-20 -right-20 w-72 h-72 bg-secondary/10 rounded-full blur-[100px]" />
+        <div className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[600px] h-80 bg-neon-purple/10 rounded-full blur-[150px]" />
+      </div>
 
       <div className="max-w-4xl mx-auto relative z-10">
         <button
           onClick={() => router.push("/")}
-          className="mb-8 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+          className="mb-8 flex items-center gap-2 text-foreground/70 hover:text-foreground transition-colors group"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           <span>返回梦境档案</span>
         </button>
 
-        <div className={`glass-card rounded-3xl p-8 md:p-12 ${gradientClass}`}>
-          <div className="flex items-start justify-between mb-8">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-4">
-                {emotionData && (
-                  <>
-                    <span className="text-4xl" role="img" aria-label={emotionData.label}>
-                      {emotionData.icon}
+        {/* 梦境卡片 - 使用和主页一样的果冻质感 */}
+        <div className="relative group">
+          {/* 动画边框渐变 */}
+          <div className="absolute -inset-[2px] rounded-3xl opacity-50 blur-sm bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto] animate-border-flow" />
+
+          {/* Glass container */}
+          <div className="relative glass-card rounded-3xl p-8 md:p-12">
+            <div className="flex items-start justify-between mb-8">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-4">
+                  {emotionData && (
+                    <>
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center border border-primary/30">
+                        <span className="text-2xl" role="img" aria-label={emotionData.label}>
+                          {emotionData.icon}
+                        </span>
+                      </div>
+                      <div>
+                        <p className={`text-sm font-medium ${emotionData.color}`}>{emotionData.label}</p>
+                        {dream.emotion && (
+                          <p className="text-xs text-foreground/60">
+                            强度: {(dream.emotion.score * 100).toFixed(0)}% | 置信度: {(dream.emotion.confidence * 100).toFixed(0)}%
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 text-foreground/70 text-sm">
+                  <Calendar className="w-4 h-4" />
+                  <span>{createdDate}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <DreamExport
+                  dreamId={parseInt(dreamId)}
+                  dreamContent={dream.content}
+                  dreamDate={createdDate}
+                  emotion={dream.emotion}
+                />
+                <button
+                  onClick={() => setIsEditDialogOpen(true)}
+                  className="p-2 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors border border-primary/20"
+                  title="编辑"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="p-2 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors disabled:opacity-50 border border-red-500/20"
+                  title="删除"
+                >
+                  {deleting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="mb-8">
+              <h1 className="text-2xl md:text-3xl font-bold mb-6">
+                <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-border-flow">
+                  {dream.title || "梦境记录"}
+                </span>
+              </h1>
+              <div className="prose prose-invert max-w-none">
+                <p className="text-lg leading-relaxed text-foreground whitespace-pre-wrap">
+                  {dream.content}
+                </p>
+              </div>
+            </div>
+
+            {dream.keywords && dream.keywords.length > 0 && (
+              <div className="border-t border-white/10 pt-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Tag className="w-4 h-4 text-foreground/60" />
+                  <span className="text-sm text-foreground/60">关键词</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {dream.keywords.map((keyword, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 text-foreground text-sm hover:from-primary/20 hover:to-secondary/20 transition-all duration-300"
+                    >
+                      {keyword}
                     </span>
-                    <div>
-                      <p className={`text-sm font-medium ${emotionData.color}`}>{emotionData.label}</p>
-                      {dream.emotion && (
-                        <p className="text-xs text-muted-foreground">
-                          强度: {(dream.emotion.score * 100).toFixed(0)}% | 置信度: {(dream.emotion.confidence * 100).toFixed(0)}%
-                        </p>
-                      )}
-                    </div>
-                  </>
-                )}
+                  ))}
+                </div>
               </div>
+            )}
 
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Calendar className="w-4 h-4" />
-                <span>{createdDate}</span>
+            {dream.updated_at !== dream.created_at && (
+              <div className="mt-6 pt-6 border-t border-white/10 text-center">
+                <p className="text-xs text-foreground/50">
+                  最后更新: {new Date(dream.updated_at).toLocaleString("zh-CN")}
+                </p>
               </div>
-            </div>
-
-            <div className="flex gap-2">
-              <DreamExport
-                dreamId={parseInt(dreamId)}
-                dreamContent={dream.content}
-                dreamDate={createdDate}
-                emotion={dream.emotion}
-              />
-              <button
-                onClick={() => router.push(`/`)}
-                className="p-2 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
-                title="编辑"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="p-2 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors disabled:opacity-50"
-                title="删除"
-              >
-                {deleting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Trash2 className="w-4 h-4" />
-                )}
-              </button>
-            </div>
+            )}
           </div>
 
-          <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-              {dream.title || "梦境记录"}
-            </h1>
-            <div className="prose prose-invert max-w-none">
-              <p className="text-lg leading-relaxed text-foreground/90 whitespace-pre-wrap">
-                {dream.content}
-              </p>
-            </div>
-          </div>
-
-          {dream.keywords && dream.keywords.length > 0 && (
-            <div className="border-t border-white/10 pt-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Tag className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">关键词</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {dream.keywords.map((keyword, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm hover:bg-primary/20 transition-colors"
-                  >
-                    {keyword}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {dream.updated_at !== dream.created_at && (
-            <div className="mt-6 pt-6 border-t border-white/10 text-center">
-              <p className="text-xs text-muted-foreground">
-                最后更新: {new Date(dream.updated_at).toLocaleString("zh-CN")}
-              </p>
-            </div>
-          )}
+          {/* 角落装饰 - 和主页一样 */}
+          <div className="absolute top-6 left-6 w-3 h-3 border-l-2 border-t-2 border-primary/50 rounded-tl" />
+          <div className="absolute top-6 right-6 w-3 h-3 border-r-2 border-t-2 border-secondary/50 rounded-tr" />
+          <div className="absolute bottom-6 left-6 w-3 h-3 border-l-2 border-b-2 border-primary/50 rounded-bl" />
+          <div className="absolute bottom-6 right-6 w-3 h-3 border-r-2 border-b-2 border-secondary/50 rounded-br" />
         </div>
 
         {/* 梦境解读 - 赛博周公 */}
@@ -237,10 +269,18 @@ export function DreamDetailView({ dreamId }: DreamDetailViewProps) {
             emotion={dream.emotion}
           />
         </div>
-
-        <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -top-20 -left-20 w-64 h-64 bg-secondary/20 rounded-full blur-3xl pointer-events-none" />
       </div>
+
+      {/* Edit Dialog */}
+      {dream && (
+        <DreamEditDialog
+          dreamId={parseInt(dreamId)}
+          initialContent={dream.content}
+          isOpen={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+          onUpdate={handleDreamUpdate}
+        />
+      )}
     </div>
   )
 }

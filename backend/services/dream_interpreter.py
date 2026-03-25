@@ -10,7 +10,8 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel
 
 # DeepSeek API 配置
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+# 使用梦境解读专用的 API Key
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_INTERPRETATION_API_KEY") or os.getenv("DEEPSEEK_API_KEY", "")
 DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
 
 # 心理象征符号库
@@ -197,23 +198,69 @@ class DreamInterpreter:
                 for s in symbols[:5]
             ])
 
-            prompt = f"""你是一位精通荣格心理学的梦境分析师（赛博周公）。请用诗意而深刻的方式解读以下梦境：
+            prompt = f"""你是一位精通荣格心理学和弗洛伊德精神分析学的梦境分析师（赛博周公）。请用诗意、深刻且富有洞察力的方式解读以下梦境。
 
-**梦境内容**:
+---
+
+## 🌙 梦境内容
 {dream_content}
 
-**情感状态**: {emotion_type}（强度: {emotion_score:.2f}）
+## 💫 情感状态
+**主导情感**: {emotion_type}
+**情感强度**: {emotion_score:.2f} / 1.0
 
-**发现的象征符号**:
+## 🔮 发现的象征符号
 {symbols_desc}
 
-请提供以下分析（用中文，诗意风格）：
-1. summary: 梦境概要（一句话）
-2. psychological_meaning: 心理学含义（100字左右）
-3. subconscious_message: 潜意识想要传达的信息（80字左右）
-4. life_guidance: 对现实生活的指引建议（50字左右）
+---
 
-请以 JSON 格式返回，包含这四个字段。"""
+## 解读要求
+
+请从心理学和潜意识角度，为这个梦境提供以下五个方面的分析：
+
+### 1️⃣ summary（梦境概要）
+用一句话（30-50字）诗意地概括这个梦境的核心内容和氛围。
+
+### 2️⃣ psychological_meaning（心理学含义）
+从荣格心理学角度分析这个梦境的深层含义（120-150字）：
+- 梦中的意象象征着什么？
+- 这些意象如何反映做梦者的内心世界？
+- 梦境在表达什么样的心理需求或冲突？
+
+### 3️⃣ subconscious_message（潜意识信息）
+解读潜意识想要通过这个梦境传达的信息（100-120字）：
+- 潜意识在提醒做梦者注意什么？
+- 有哪些被压抑的情感或想法需要被看见？
+- 这个梦境与做梦者的现实生活有什么关联？
+
+### 4️⃣ life_guidance（生活指引）
+基于梦境分析，给出对现实生活的具体建议（60-80字）：
+- 做梦者应该如何将这些洞察应用到日常生活中？
+- 有什么具体的行动建议？
+
+---
+
+## 输出格式
+
+请严格按照以下 JSON 格式返回：
+
+```json
+{{
+    "summary": "梦境概要（30-50字）",
+    "psychological_meaning": "心理学含义分析（120-150字）",
+    "subconscious_message": "潜意识信息解读（100-120字）",
+    "life_guidance": "生活指引建议（60-80字）"
+}}
+```
+
+## 风格要求
+- 语言优美、富有诗意，同时保持专业性和洞察力
+- 避免陈词滥调，提供独特的解读视角
+- 兼顾科学性和可读性，让普通人也能理解
+- 使用温暖、关怀的语气，像一位睿智的心理咨询师
+
+**只返回JSON格式，不要包含任何其他文字或标记。**
+"""
 
             response = await client.post(
                 "/chat/completions",

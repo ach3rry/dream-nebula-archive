@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:demo": "NEXT_PUBLIC_DEMO_MODE=true next dev --turbopack",
     "build": "next build",
+    "build:demo": "NEXT_PUBLIC_DEMO_MODE=true next build",
     "start": "next start",
     "lint": "next lint"
   },

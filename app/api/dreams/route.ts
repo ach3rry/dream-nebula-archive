@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8001"
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000"
 
 // Default user ID for demo (in production, this would come from authentication)
 const DEFAULT_USER_ID = 1
@@ -10,6 +10,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("user_id") || String(DEFAULT_USER_ID)
+
+    console.log(`[API] Fetching dreams from backend: ${BACKEND_URL}/api/dreams?user_id=${userId}`)
 
     const response = await fetch(
       `${BACKEND_URL}/api/dreams?user_id=${userId}&page=1&page_size=50`,
@@ -23,18 +25,26 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text()
-      throw new Error(`Backend responded with ${response.status}: ${errorText}`)
+      console.error(`[API] Backend error: ${response.status} - ${errorText}`)
+      // Return empty array on error to prevent frontend crashes
+      return NextResponse.json([])
     }
 
     const data = await response.json()
+    console.log(`[API] Backend response structure:`, {
+      hasDreams: 'dreams' in data,
+      dreamsIsArray: Array.isArray(data.dreams),
+      dreamsLength: data.dreams?.length,
+      total: data.total
+    })
+
     // Return just the dreams array for simpler frontend handling
-    return NextResponse.json(data.dreams || [])
+    const dreams = Array.isArray(data.dreams) ? data.dreams : []
+    return NextResponse.json(dreams)
   } catch (error) {
-    console.error("Error fetching dreams:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch dreams", details: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
-    )
+    console.error("[API] Error fetching dreams:", error)
+    // Return empty array on error to prevent frontend crashes
+    return NextResponse.json([])
   }
 }
 
@@ -60,13 +70,17 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text()
-      throw new Error(`Backend responded with ${response.status}: ${errorText}`)
+      console.error(`[API] Backend error: ${response.status} - ${errorText}`)
+      return NextResponse.json(
+        { error: "Failed to create dream", details: errorText },
+        { status: 500 }
+      )
     }
 
     const data = await response.json()
     return NextResponse.json(data, { status: 201 })
   } catch (error) {
-    console.error("Error creating dream:", error)
+    console.error("[API] Error creating dream:", error)
     return NextResponse.json(
       { error: "Failed to create dream", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
