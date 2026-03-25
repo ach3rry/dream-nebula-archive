@@ -14,7 +14,13 @@ interface DreamExportProps {
   }
   interpretation?: {
     summary?: string
+    symbols?: Array<{
+      symbol: string
+      meaning: string
+      mood: string
+    }>
     psychological_meaning?: string
+    subconscious_message?: string
     life_guidance?: string
     mental_weather?: {
       forecast: string
