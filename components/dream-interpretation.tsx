@@ -34,13 +34,13 @@ interface InterpretationResult {
 
 // 更准确的情感映射
 const emotionIcons: Record<string, string> = {
-  "平静": "🌙", "愉悦": "✨", "快乐": "✨",
+  "平静": "🌙", "宁静": "🌊",
+  "愉悦": "✨", "快乐": "✨",
   "忧郁": "🌫️", "悲伤": "💧", "痛苦": "💔",
   "恐惧": "👁️", "害怕": "😰",
   "兴奋": "🚀", "期待": "🌟",
   "焦虑": "⚡", "紧张": "😖",
-  "愤怒": "🔥", "生气": "😠",
-  "平静": "🌙", "宁静": "🌊"
+  "愤怒": "🔥", "生气": "😠"
 }
 
 export function DreamInterpretation({ dreamId, dreamContent, emotion }: InterpretationProps) {
