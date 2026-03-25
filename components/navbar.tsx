@@ -5,8 +5,9 @@ import { cn } from "@/lib/utils"
 import { Menu, X, Sparkles, Archive, User } from "lucide-react"
 
 const navLinks = [
-  { name: "档案探索", href: "#archive", icon: Archive },
-  { name: "我的梦境", href: "#dreams", icon: User },
+  { name: "档案探索", href: "/#archive", icon: Archive },
+  { name: "数据统计", href: "/stats", icon: Sparkles },
+  { name: "我的梦境", href: "/#dreams", icon: User },
 ]
 
 export function Navbar() {

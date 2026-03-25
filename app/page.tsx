@@ -1,9 +1,38 @@
+"use client"
+
+import { useState } from "react"
 import { Navbar } from "@/components/navbar"
 import { Starfield } from "@/components/starfield"
 import { DreamRecorder } from "@/components/dream-recorder"
 import { DreamFeed } from "@/components/dream-feed"
+import { DreamNebula } from "@/components/dream-nebula"
+import { fetchDreams } from "@/lib/api-client"
+import { Sparkles, Eye } from "lucide-react"
 
 export default function HomePage() {
+  const [showNebula, setShowNebula] = useState(false)
+  const [dreams, setDreams] = useState<any[]>([])
+
+  const handleOpenNebula = async () => {
+    // 加载梦境数据
+    const dreamsData = await fetchDreams(1)
+    setDreams(dreamsData)
+    setShowNebula(true)
+  }
+
+  if (showNebula) {
+    return (
+      <DreamNebula
+        dreams={dreams}
+        onClose={() => setShowNebula(false)}
+        onDreamClick={(id) => {
+          setShowNebula(false)
+          window.location.href = `/dreams/${id}`
+        }}
+      />
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Animated background gradient */}
@@ -43,6 +72,21 @@ export default function HomePage() {
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto text-balance">
               每一个梦境都是宇宙中独特的星辰，让 AI 解析你的潜意识，在星空中找到属于你的那颗星
             </p>
+          </div>
+
+          {/* Nebula View Button */}
+          <div className="mb-8">
+            <button
+              onClick={handleOpenNebula}
+              className="group relative px-8 py-4 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30 hover:border-primary/50 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(0,245,255,0.3)]"
+            >
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-primary group-hover:rotate-12 transition-transform" />
+                <span className="font-semibold text-foreground">查看梦境星云</span>
+                <Eye className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+              </div>
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/10 to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </button>
           </div>
 
           {/* Dream Recorder */}

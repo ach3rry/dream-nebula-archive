@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react"
 import { DreamInterpretation } from "./dream-interpretation"
 import { DreamExport } from "./dream-export"
 import { DreamEditDialog } from "./dream-edit-dialog"
+import { DreamShare } from "./dream-share"
 import { fetchDream, deleteDream as apiDeleteDream } from "@/lib/api-client"
 
 const emotionIcons: Record<string, { icon: string; label: string; color: string; bgGradient: string }> = {
@@ -167,7 +168,7 @@ export function DreamDetailView({ dreamId }: DreamDetailViewProps) {
                         </span>
                       </div>
                       <div>
-                        <p className={`text-sm font-medium ${emotionData.color}`}>{emotionData.label}</p>
+                        <p className={`text-sm font-bold ${emotionData.color}`}>{emotionData.label}</p>
                         {dream.emotion && (
                           <p className="text-xs text-foreground/60">
                             强度: {(dream.emotion.score * 100).toFixed(0)}% | 置信度: {(dream.emotion.confidence * 100).toFixed(0)}%
@@ -185,6 +186,10 @@ export function DreamDetailView({ dreamId }: DreamDetailViewProps) {
               </div>
 
               <div className="flex gap-2">
+                <DreamShare
+                  dreamId={parseInt(dreamId)}
+                  dreamContent={dream.content}
+                />
                 <DreamExport
                   dreamId={parseInt(dreamId)}
                   dreamContent={dream.content}
@@ -193,21 +198,33 @@ export function DreamDetailView({ dreamId }: DreamDetailViewProps) {
                 />
                 <button
                   onClick={() => setIsEditDialogOpen(true)}
-                  className="p-2 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors border border-primary/20"
+                  className="relative group p-2.5 rounded-xl cursor-pointer overflow-hidden transition-all duration-500 ease-out hover:scale-105 active:scale-95"
                   title="编辑"
                 >
-                  <Edit2 className="w-4 h-4" />
+                  {/* 渐变背景层 */}
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary/15 to-secondary/15 opacity-0 group-hover:opacity-100 transition-opacity duration-500 backdrop-blur-lg" />
+                  {/* 内部高光 */}
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/15 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  {/* 边缘柔光 */}
+                  <div className="absolute inset-0 rounded-xl shadow-[inset_0_2px_4px_rgba(255,255,255,0.1),inset_0_-2px_4px_rgba(0,0,0,0.1)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <Edit2 className="relative z-10 w-4 h-4 text-foreground/70 group-hover:text-foreground transition-colors duration-300" />
                 </button>
                 <button
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="p-2 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors disabled:opacity-50 border border-red-500/20"
+                  className="relative group p-2.5 rounded-xl cursor-pointer overflow-hidden transition-all duration-500 ease-out hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                   title="删除"
                 >
+                  {/* 渐变背景层 */}
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-red-500/15 to-orange-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-500 backdrop-blur-lg" />
+                  {/* 内部高光 */}
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/15 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  {/* 边缘柔光 */}
+                  <div className="absolute inset-0 rounded-xl shadow-[inset_0_2px_4px_rgba(255,255,255,0.1),inset_0_-2px_4px_rgba(0,0,0,0.1)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   {deleting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="relative z-10 w-4 h-4 text-red-400 animate-spin" />
                   ) : (
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="relative z-10 w-4 h-4 text-red-400/70 group-hover:text-red-400 transition-colors duration-300" />
                   )}
                 </button>
               </div>
@@ -236,7 +253,7 @@ export function DreamDetailView({ dreamId }: DreamDetailViewProps) {
                   {dream.keywords.map((keyword, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 text-foreground text-sm hover:from-primary/20 hover:to-secondary/20 transition-all duration-300"
+                      className="inline-block px-4 py-2 rounded-2xl bg-gradient-to-r from-primary/15 to-secondary/15 border border-primary/30 text-foreground font-bold text-base hover:from-primary/25 hover:to-secondary/25 hover:scale-105 transition-all duration-300 backdrop-blur-sm shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-primary/10 cursor-default"
                     >
                       {keyword}
                     </span>

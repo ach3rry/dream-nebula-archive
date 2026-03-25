@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
-import { Sparkles, Wand2, Loader2, CheckCircle2 } from "lucide-react"
+import { Sparkles, Wand2, CheckCircle2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { NebulaSkeleton } from "./nebula-skeleton"
 
 export function DreamRecorder() {
   const router = useRouter()
@@ -70,15 +71,20 @@ export function DreamRecorder() {
 
       // Success!
       setSubmitSuccess(true)
-      setDreamText("")
 
-      // Reset success message after 3 seconds
-      setTimeout(() => {
-        setSubmitSuccess(false)
-      }, 3000)
-
-      // Refresh the page to show new dream
-      router.refresh()
+      // Navigate to the newly created dream's detail page
+      if (data.id) {
+        setTimeout(() => {
+          router.push(`/dreams/${data.id}`)
+        }, 1000) // Wait 1 second to show success message
+      } else {
+        // Fallback: refresh page if no ID returned
+        setDreamText("")
+        setTimeout(() => {
+          setSubmitSuccess(false)
+          router.refresh()
+        }, 2000)
+      }
     } catch (err) {
       console.error("Error creating dream:", err)
       setErrorMessage(err instanceof Error ? err.message : "创建梦境失败，请稍后重试")
@@ -112,6 +118,13 @@ export function DreamRecorder() {
       {errorMessage && (
         <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-3 animate-fade-in">
           <p className="text-red-300">{errorMessage}</p>
+        </div>
+      )}
+
+      {/* Loading Skeleton - 提交时显示 */}
+      {isSubmitting && (
+        <div className="mb-6">
+          <NebulaSkeleton message="AI正在分析情感并生成星云..." />
         </div>
       )}
 
@@ -195,8 +208,8 @@ export function DreamRecorder() {
           <span className="relative flex items-center gap-3">
             {isSubmitting ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>记录中...</span>
+                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <span>处理中...</span>
               </>
             ) : (
               <>

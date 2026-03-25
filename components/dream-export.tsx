@@ -395,7 +395,7 @@ export function DreamExport({
         ) : (
           <Image className="w-4 h-4" />
         )}
-        <span className="text-sm">图片</span>
+        <span className="text-sm font-bold">图片</span>
       </button>
 
       <button
@@ -409,7 +409,7 @@ export function DreamExport({
         ) : (
           <FileText className="w-4 h-4" />
         )}
-        <span className="text-sm">PDF</span>
+        <span className="text-sm font-bold">PDF</span>
       </button>
     </div>
   )

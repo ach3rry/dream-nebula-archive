@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Loader2, Sparkles, Cloud, Brain, Compass } from "lucide-react"
+import { Sparkles, Cloud, Brain, Compass } from "lucide-react"
 import { DreamExport } from "./dream-export"
 import { interpretDream } from "@/lib/api-client"
+import { NebulaSkeleton } from "./nebula-skeleton"
 
 interface InterpretationProps {
   dreamId: number
@@ -70,9 +71,8 @@ export function DreamInterpretation({ dreamId, dreamContent, emotion }: Interpre
 
   if (loading) {
     return (
-      <div className="glass-card rounded-2xl p-8 text-center">
-        <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-        <p className="text-muted-foreground">赛博周公正解读你的梦境...</p>
+      <div className="glass-card rounded-2xl p-2 border border-primary/20">
+        <NebulaSkeleton message="赛博周公正解读你的梦境" />
       </div>
     )
   }
@@ -93,21 +93,38 @@ export function DreamInterpretation({ dreamId, dreamContent, emotion }: Interpre
 
   if (!result) {
     return (
-      <div className="glass-card rounded-2xl p-8 text-center">
-        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-          <Sparkles className="w-10 h-10 text-primary" />
+      <div className="glass-card rounded-2xl p-8 text-center relative overflow-hidden">
+        {/* 霓虹背景光晕 */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/10 to-primary/10 animate-nebula" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-primary/20 rounded-full blur-[60px]" />
+        <div className="absolute bottom-0 right-0 w-48 h-48 bg-secondary/20 rounded-full blur-[80px]" />
+
+        <div className="relative z-10">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center border border-primary/30 shadow-lg shadow-primary/20">
+            <Sparkles className="w-10 h-10 text-primary" />
+          </div>
+          <h3 className="text-xl font-bold mb-3">
+            <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-border-flow drop-shadow-[0_0_20px_rgba(0,245,255,0.3)]">
+              需要解读这个梦境吗？
+            </span>
+          </h3>
+          <p className="text-foreground/80 mb-6">
+            赛博周公将通过心理学分析，为你解读梦境中的象征符号和潜意识信息
+          </p>
+          <button
+            onClick={fetchInterpretation}
+            className="relative group inline-flex items-center gap-2 px-8 py-3 rounded-full overflow-hidden transition-all duration-500 hover:scale-105"
+          >
+            {/* 霓虹渐变背景 */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto] animate-border-flow opacity-90" />
+            {/* 内部高光 */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent opacity-50" />
+            {/* 外层光晕 */}
+            <div className="absolute -inset-2 bg-gradient-to-r from-primary/40 via-secondary/40 to-primary/40 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <Sparkles className="relative z-10 w-5 h-5 text-white" />
+            <span className="relative z-10 font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">开始解读</span>
+          </button>
         </div>
-        <h3 className="text-xl font-semibold mb-3">需要解读这个梦境吗？</h3>
-        <p className="text-muted-foreground mb-6">
-          赛博周公将通过心理学分析，为你解读梦境中的象征符号和潜意识信息
-        </p>
-        <button
-          onClick={fetchInterpretation}
-          className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-to-r from-primary/30 to-secondary/30 hover:from-primary/40 hover:to-secondary/40 border border-primary/30 transition-all duration-300 hover:scale-105"
-        >
-          <Sparkles className="w-5 h-5" />
-          <span>开始解读</span>
-        </button>
       </div>
     )
   }

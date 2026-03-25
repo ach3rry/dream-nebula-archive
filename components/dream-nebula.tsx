@@ -18,27 +18,25 @@ interface DreamNebulaProps {
 
 // 情感类型对应的颜色
 const emotionColors: Record<string, string> = {
-  "平静": "#60a5fa",  // blue
-  "愉悦": "#c084fc",  // purple
-  "忧郁": "#a78bfa",  // purple-2
-  "悲伤": "#93c5fd",  // blue-2
-  "恐惧": "#f87171",  // red
-  "兴奋": "#fbbf24",  // yellow
-  "焦虑": "#fb923c",  // orange
+  "平静": "#60a5fa",
+  "愉悦": "#c084fc",
+  "忧郁": "#a78bfa",
+  "悲伤": "#93c5fd",
+  "恐惧": "#f87171",
+  "兴奋": "#fbbf24",
+  "焦虑": "#fb923c",
 }
 
-// 情感类型对应的发光颜色
 const emotionGlowColors: Record<string, string> = {
-  "平静": "rgba(96, 165, 250, 0.4)",  // blue glow
-  "愉悦": "rgba(192, 132, 252, 0.4)",  // purple glow
-  "忧郁": "rgba(167, 139, 250, 0.4)",  // purple-2 glow
-  "悲伤": "rgba(147, 197, 253, 0.4)",  // blue-2 glow
-  "恐惧": "rgba(248, 113, 113, 0.4)",  // red glow
-  "兴奋": "rgba(251, 191, 36, 0.4)",  // yellow glow
-  "焦虑": "rgba(251, 146, 60, 0.4)",  // orange glow
+  "平静": "rgba(96, 165, 250, 0.4)",
+  "愉悦": "rgba(192, 132, 252, 0.4)",
+  "忧郁": "rgba(167, 139, 250, 0.4)",
+  "悲伤": "rgba(147, 197, 253, 0.4)",
+  "恐惧": "rgba(248, 113, 113, 0.4)",
+  "兴奋": "rgba(251, 191, 36, 0.4)",
+  "焦虑": "rgba(251, 146, 60, 0.4)",
 }
 
-// 星云背景主题配置
 const nebulaThemes: Record<string, {
   primaryColors: string[]
   secondaryColors: string[]
@@ -99,25 +97,104 @@ const nebulaThemes: Record<string, {
 
 export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [hoveredDream, setHoveredDream] = useState<number | null>(null)
+  const hoveredDreamRef = useRef<number | null>(null)
   const [dominantEmotion, setDominantEmotion] = useState<string>("平静")
   const animationRef = useRef<number | undefined>(undefined)
 
-  // 使用 ref 跟踪当前粒子数据，用于悬停检测
+  // 交互状态
+  const rotationRef = useRef({ x: 0, y: 0 })
+  const targetRotationRef = useRef({ x: 0, y: 0 })
+  const zoomRef = useRef(1)
+  const targetZoomRef = useRef(1)
+  const isDraggingRef = useRef(false)
+  const lastMousePosRef = useRef({ x: 0, y: 0 })
+
+  // 使用 ref 跟踪当前粒子数据
   const particlesRef = useRef<any[]>([])
   const mousePosRef = useRef({ x: 0, y: 0 })
 
-  // 鼠标移动处理
+  // 鼠标按下 - 开始拖动
+  const handleMouseDown = useCallback((e: MouseEvent) => {
+    isDraggingRef.current = true
+    lastMousePosRef.current = { x: e.clientX, y: e.clientY }
+  }, [])
+
+  // 鼠标移动 - 处理拖动和悬停
   const handleMouseMove = useCallback((e: MouseEvent) => {
     const canvas = canvasRef.current
     if (!canvas) return
 
     const rect = canvas.getBoundingClientRect()
+
+    // 处理拖动旋转
+    if (isDraggingRef.current) {
+      const deltaX = e.clientX - lastMousePosRef.current.x
+      const deltaY = e.clientY - lastMousePosRef.current.y
+
+      targetRotationRef.current.y += deltaX * 0.005
+      targetRotationRef.current.x += deltaY * 0.005
+
+      // 限制旋转角度
+      targetRotationRef.current.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, targetRotationRef.current.x))
+
+      lastMousePosRef.current = { x: e.clientX, y: e.clientY }
+    } else {
+      // 悬停时的轻微旋转
+      const mouseX = e.clientX - rect.left
+      const mouseY = e.clientY - rect.top
+
+      targetRotationRef.current.y += (mouseX / canvas.width - 0.5) * 0.0001
+      targetRotationRef.current.x += (mouseY / canvas.height - 0.5) * 0.0001
+    }
+
+    // 更新鼠标位置用于悬停检测
     mousePosRef.current = {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top
     }
   }, [])
+
+  // 鼠标松开 - 停止拖动
+  const handleMouseUp = useCallback(() => {
+    isDraggingRef.current = false
+  }, [])
+
+  // 滚轮缩放
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault()
+    const zoomDelta = e.deltaY * -0.001
+    targetZoomRef.current = Math.max(0.5, Math.min(3, targetZoomRef.current + zoomDelta))
+  }, [])
+
+  // 点击检测
+  const handleClick = useCallback((e: MouseEvent) => {
+    // 如果刚刚在拖动，不触发点击
+    if (isDraggingRef.current) return
+
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const rect = canvas.getBoundingClientRect()
+    const clickX = e.clientX - rect.left
+    const clickY = e.clientY - rect.top
+
+    // 检查是否点击了某个梦境粒子
+    for (const particle of particlesRef.current) {
+      if (!particle.projected) continue
+
+      const dx = clickX - particle.projected.x
+      const dy = clickY - particle.projected.y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+
+      // 点击区域根据缩放调整
+      const clickRadius = 25 * zoomRef.current * particle.projected.scale
+
+      if (dist < clickRadius) {
+        onDreamClick(particle.dreamId)
+        return
+      }
+    }
+  }, [onDreamClick])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -149,15 +226,16 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
       size: number
       baseSize: number
       emotion?: string
+      projected?: { x: number; y: number; scale: number }
     }
 
     const particles: Particle[] = []
 
     // 初始化梦境粒子 - 使用螺旋分布
     dreams.forEach((dream, index) => {
-      const angle = (index / dreams.length) * Math.PI * 4  // 两圈螺旋
-      const radius = 100 + (index / dreams.length) * 250  // 从内到外
-      const z = Math.sin(angle * 2) * 100  // 波动起伏
+      const angle = (index / dreams.length) * Math.PI * 4
+      const radius = 100 + (index / dreams.length) * 250
+      const z = Math.sin(angle * 2) * 100
 
       const emotionType = dream.emotion?.type || "平静"
 
@@ -178,7 +256,6 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
       })
     })
 
-    // 存储粒子到 ref 用于悬停检测
     particlesRef.current = particles
 
     // 添加背景星尘
@@ -193,7 +270,7 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
       })
     }
 
-    // 计算主要情感类型用于星云主题
+    // 计算主要情感类型
     const emotionCounts: Record<string, number> = {}
     dreams.forEach(dream => {
       const emotion = dream.emotion?.type || "平静"
@@ -215,7 +292,6 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
       phase: number
     }> = []
 
-    // 根据主题密度创建云雾
     const cloudCount = Math.floor(15 * nebulaTheme.density)
     for (let i = 0; i < cloudCount; i++) {
       const isPrimary = i % 3 === 0
@@ -232,59 +308,43 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
       })
     }
 
-    let mouseX = 0
-    let mouseY = 0
-    let targetRotationX = 0
-    let targetRotationY = 0
-    let currentRotationX = 0
-    let currentRotationY = 0
-
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseX = (e.clientX - canvas.width / 2) * 0.0005
-      mouseY = (e.clientY - canvas.height / 2) * 0.0005
-    }
-
-    canvas.addEventListener("mousemove", handleMouseMove)
-    canvas.addEventListener("mousemove", (e) => {
-      const rect = canvas.getBoundingClientRect()
-      mousePosRef.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      }
-    })
-    canvas.addEventListener("click", handleClick)
-
+    // 改进的 3D 投影函数 - 修复负 scale 问题
     function project3D(x: number, y: number, z: number): { x: number; y: number; scale: number } {
-      const fov = 400
-      const scale = fov / (fov + z)
+      if (!canvas) return { x: 0, y: 0, scale: 0 }
+
+      const fov = 400 * zoomRef.current
+      const zOffset = z + 200 // 将物体推远一点，避免负 scale
+
+      // 确保 scale 始终为正数
+      const scale = Math.max(0.01, fov / Math.max(0.1, fov + zOffset))
+
       return {
-        x: x * scale + (canvas?.width || 0) / 2,
-        y: y * scale + (canvas?.height || 0) / 2,
-        scale
+        x: x * scale + canvas.width / 2,
+        y: y * scale + canvas.height / 2,
+        scale: Math.abs(scale) // 确保返回的 scale 是正数
       }
     }
 
-    function handleClick(e: MouseEvent) {
-      if (!canvas) return
-      const rect = canvas.getBoundingClientRect()
-      const clickX = e.clientX - rect.left
-      const clickY = e.clientY - rect.top
-
-      for (const particle of particles) {
-        const projected = project3D(particle.x, particle.y, particle.z)
-        const dx = clickX - projected.x
-        const dy = clickY - projected.y
-        const dist = Math.sqrt(dx * dx + dy * dy)
-
-        if (dist < 20 * projected.scale) {
-          onDreamClick(particle.dreamId)
-          return
-        }
-      }
-    }
+    // 添加事件监听
+    canvas.addEventListener("mousedown", handleMouseDown)
+    canvas.addEventListener("mousemove", handleMouseMove)
+    canvas.addEventListener("mouseup", handleMouseUp)
+    canvas.addEventListener("mouseleave", handleMouseUp)
+    canvas.addEventListener("wheel", handleWheel, { passive: false })
+    canvas.addEventListener("click", handleClick)
 
     function animate() {
       if (!ctx || !canvas) return
+
+      // 平滑更新旋转和缩放
+      rotationRef.current.x += (targetRotationRef.current.x - rotationRef.current.x) * 0.1
+      rotationRef.current.y += (targetRotationRef.current.y - rotationRef.current.y) * 0.1
+      zoomRef.current += (targetZoomRef.current - zoomRef.current) * 0.1
+
+      // 自动缓慢旋转（当没有拖动时）
+      if (!isDraggingRef.current) {
+        targetRotationRef.current.y += 0.001
+      }
 
       // 绘制渐变背景
       const bgGradient = ctx.createRadialGradient(
@@ -300,21 +360,18 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
       // 绘制程序化星云云雾
       const time = Date.now() * 0.001
       nebulaClouds.forEach(cloud => {
-        // 更新云雾位置
         cloud.x += cloud.vx
         cloud.y += cloud.vy
         cloud.phase += 0.01
 
-        // 边界检查，循环移动
+        // 边界检查
         if (cloud.x < -canvas.width * 0.5) cloud.x = canvas.width * 0.5
         if (cloud.x > canvas.width * 0.5) cloud.x = -canvas.width * 0.5
         if (cloud.y < -canvas.height * 0.5) cloud.y = canvas.height * 0.5
         if (cloud.y > canvas.height * 0.5) cloud.y = -canvas.height * 0.5
 
-        // 呼吸效果
         const breathingAlpha = cloud.alpha + Math.sin(cloud.phase) * 0.01
 
-        // 绘制云雾
         const gradient = ctx.createRadialGradient(
           canvas.width / 2 + cloud.x,
           canvas.height / 2 + cloud.y,
@@ -345,25 +402,14 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
         }
       })
 
-      // 悬停检测 - 跟踪鼠标位置
-      let foundHover = false
-      const mouseX = mousePosRef.current.x
-      const mouseY = mousePosRef.current.y
-
-      // 平滑旋转
-      targetRotationX += (mouseY - targetRotationX) * 0.05
-      targetRotationY += (mouseX - targetRotationY) * 0.05
-      currentRotationX += (targetRotationX - currentRotationX) * 0.02
-      currentRotationY += (targetRotationY - currentRotationY) * 0.02
-
-      const cosX = Math.cos(currentRotationX)
-      const sinX = Math.sin(currentRotationX)
-      const cosY = Math.cos(currentRotationY)
-      const sinY = Math.sin(currentRotationY)
+      // 旋转矩阵
+      const cosX = Math.cos(rotationRef.current.x)
+      const sinX = Math.sin(rotationRef.current.x)
+      const cosY = Math.cos(rotationRef.current.y)
+      const sinY = Math.sin(rotationRef.current.y)
 
       // 绘制背景星尘
       stars.forEach(star => {
-        // 旋转星尘
         let x = star.x
         let y = star.y * cosX - star.z * sinX
         let z = star.y * sinX + star.z * cosX
@@ -371,12 +417,18 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
         z = x * sinY + z * cosY
 
         const projected = project3D(x, y, z)
-        const alpha = star.brightness * 0.5 * projected.scale
 
-        ctx.beginPath()
-        ctx.arc(projected.x, projected.y, star.size * projected.scale, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`
-        ctx.fill()
+        // 只绘制在视野范围内的星星
+        if (projected.scale > 0 && projected.x > 0 && projected.x < canvas.width &&
+            projected.y > 0 && projected.y < canvas.height) {
+          const alpha = Math.min(1, star.brightness * 0.5 * projected.scale)
+          const radius = Math.abs(star.size * projected.scale)
+
+          ctx.beginPath()
+          ctx.arc(projected.x, projected.y, radius, 0, Math.PI * 2)
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`
+          ctx.fill()
+        }
       })
 
       // 绘制连线
@@ -393,31 +445,44 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
             const p1 = project3D(particles[i].x, particles[i].y, particles[i].z)
             const p2 = project3D(particles[j].x, particles[j].y, particles[j].z)
 
-            ctx.beginPath()
-            ctx.moveTo(p1.x, p1.y)
-            ctx.lineTo(p2.x, p2.y)
-            ctx.stroke()
+            // 只绘制在视野范围内的连线
+            if (p1.scale > 0 && p2.scale > 0) {
+              ctx.beginPath()
+              ctx.moveTo(p1.x, p1.y)
+              ctx.lineTo(p2.x, p2.y)
+              ctx.stroke()
+            }
           }
         }
       }
 
-      // 更新和绘制梦境粒子
-      particles.forEach((particle, index) => {
-        // 缓慢移动
-        particle.x += particle.vx
-        particle.y += particle.vy
-        particle.z += particle.vz
+      // 悬停检测
+      let foundHover = false
+      const mouseX = mousePosRef.current.x
+      const mouseY = mousePosRef.current.y
 
-        // 边界检查
-        const maxDist = 400
-        const dist = Math.sqrt(particle.x ** 2 + particle.y ** 2 + particle.z ** 2)
-        if (dist > maxDist) {
-          particle.vx *= -0.5
-          particle.vy *= -0.5
-          particle.vz *= -0.5
+      // 更新和绘制梦境粒子
+      particles.forEach((particle) => {
+        // 只有未悬停的粒子才添加自己的漂移移动
+        const isCurrentlyHovered = hoveredDreamRef.current === particle.dreamId
+
+        if (!isCurrentlyHovered) {
+          // 缓慢移动
+          particle.x += particle.vx
+          particle.y += particle.vy
+          particle.z += particle.vz
+
+          // 边界检查
+          const maxDist = 400
+          const dist = Math.sqrt(particle.x ** 2 + particle.y ** 2 + particle.z ** 2)
+          if (dist > maxDist) {
+            particle.vx *= -0.5
+            particle.vy *= -0.5
+            particle.vz *= -0.5
+          }
         }
 
-        // 旋转
+        // 应用旋转（所有粒子都跟随整体旋转）
         let x = particle.x
         let y = particle.y * cosX - particle.z * sinX
         let z = particle.y * sinX + particle.z * cosX
@@ -425,89 +490,102 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
         z = x * sinY + z * cosY
 
         const projected = project3D(x, y, z)
+        particle.projected = projected // 保存投影结果用于点击检测
 
         // 悬停检测
-        const dx = mouseX - projected.x
-        const dy = mouseY - projected.y
-        const hoverDist = Math.sqrt(dx * dx + dy * dy)
-        const isHovered = hoverDist < particle.size * projected.scale * 2
+        let isHovered = false
+        if (projected.scale > 0 && !foundHover) {
+          const dx = mouseX - projected.x
+          const dy = mouseY - projected.y
+          const hoverDist = Math.sqrt(dx * dx + dy * dy)
+          const hoverRadius = particle.baseSize * projected.scale * 3
 
-        if (isHovered && !foundHover) {
-          setHoveredDream(particle.dreamId)
-          foundHover = true
+          if (hoverDist < hoverRadius) {
+            hoveredDreamRef.current = particle.dreamId
+            foundHover = true
+            isHovered = true
+          }
+        }
+
+        // 如果之前就是悬停状态，保持悬停
+        if (isCurrentlyHovered) {
+          isHovered = true
         }
 
         // 悬停效果 - 放大粒子
         const scaleMultiplier = isHovered ? 1.5 : 1.0
         particle.size = particle.baseSize * scaleMultiplier
 
-        // 绘制外层光晕
-        const outerGlow = ctx.createRadialGradient(
-          projected.x, projected.y, 0,
-          projected.x, projected.y, particle.size * projected.scale * 4
-        )
-        outerGlow.addColorStop(0, particle.glowColor)
-        outerGlow.addColorStop(0.5, particle.glowColor.replace("0.4", "0.2"))
-        outerGlow.addColorStop(1, "transparent")
+        if (projected.scale > 0) {
+          // 绘制外层光晕
+          const outerGlow = ctx.createRadialGradient(
+            projected.x, projected.y, 0,
+            projected.x, projected.y, particle.size * projected.scale * 4
+          )
+          outerGlow.addColorStop(0, particle.glowColor)
+          outerGlow.addColorStop(0.5, particle.glowColor.replace("0.4", "0.2"))
+          outerGlow.addColorStop(1, "transparent")
 
-        ctx.beginPath()
-        ctx.arc(projected.x, projected.y, particle.size * projected.scale * 4, 0, Math.PI * 2)
-        ctx.fillStyle = outerGlow
-        ctx.fill()
-
-        // 绘制中层光晕
-        const innerGlow = ctx.createRadialGradient(
-          projected.x, projected.y, 0,
-          projected.x, projected.y, particle.size * projected.scale * 2
-        )
-        innerGlow.addColorStop(0, particle.color + "80")
-        innerGlow.addColorStop(1, particle.color + "00")
-
-        ctx.beginPath()
-        ctx.arc(projected.x, projected.y, particle.size * projected.scale * 2, 0, Math.PI * 2)
-        ctx.fillStyle = innerGlow
-        ctx.fill()
-
-        // 绘制核心
-        ctx.beginPath()
-        ctx.arc(projected.x, projected.y, particle.size * projected.scale, 0, Math.PI * 2)
-        ctx.fillStyle = particle.color
-        ctx.fill()
-
-        // 悬停时显示内容提示框
-        if (isHovered) {
-          const padding = 12
-          const textWidth = ctx.measureText(particle.content).width
-          const boxWidth = textWidth + padding * 2
-          const boxHeight = 40
-          const boxY = projected.y - 40 * projected.scale
-
-          // 背景
-          ctx.fillStyle = "rgba(3, 7, 18, 0.9)"
-          ctx.strokeStyle = particle.color
-          ctx.lineWidth = 2
-          roundRect(ctx, projected.x - boxWidth / 2, boxY - boxHeight, boxWidth, boxHeight, 8)
+          ctx.beginPath()
+          ctx.arc(projected.x, projected.y, particle.size * projected.scale * 4, 0, Math.PI * 2)
+          ctx.fillStyle = outerGlow
           ctx.fill()
-          ctx.stroke()
 
-          // 文字
-          ctx.fillStyle = "rgba(255, 255, 255, 0.95)"
-          ctx.font = "13px sans-serif"
-          ctx.textAlign = "center"
-          ctx.textBaseline = "middle"
-          ctx.fillText(particle.content, projected.x, boxY - boxHeight / 2)
+          // 绘制中层光晕
+          const innerGlow = ctx.createRadialGradient(
+            projected.x, projected.y, 0,
+            projected.x, projected.y, particle.size * projected.scale * 2
+          )
+          innerGlow.addColorStop(0, particle.color + "80")
+          innerGlow.addColorStop(1, particle.color + "00")
 
-          // 情感标签
-          const emotionLabel = particle.emotion || "未知"
-          ctx.font = "11px sans-serif"
+          ctx.beginPath()
+          ctx.arc(projected.x, projected.y, particle.size * projected.scale * 2, 0, Math.PI * 2)
+          ctx.fillStyle = innerGlow
+          ctx.fill()
+
+          // 绘制核心
+          const coreRadius = Math.abs(particle.size * projected.scale)
+          ctx.beginPath()
+          ctx.arc(projected.x, projected.y, coreRadius, 0, Math.PI * 2)
           ctx.fillStyle = particle.color
-          ctx.fillText(emotionLabel, projected.x, boxY + 15 * projected.scale)
+          ctx.fill()
+
+          // 悬停时显示内容提示框
+          if (isHovered) {
+            const padding = 12
+            ctx.font = "13px sans-serif"
+            const textWidth = ctx.measureText(particle.content).width
+            const boxWidth = textWidth + padding * 2
+            const boxHeight = 40
+            const boxY = projected.y - 40 * projected.scale
+
+            // 背景
+            ctx.fillStyle = "rgba(3, 7, 18, 0.9)"
+            ctx.strokeStyle = particle.color
+            ctx.lineWidth = 2
+            roundRect(ctx, projected.x - boxWidth / 2, boxY - boxHeight, boxWidth, boxHeight, 8)
+            ctx.fill()
+            ctx.stroke()
+
+            // 文字
+            ctx.fillStyle = "rgba(255, 255, 255, 0.95)"
+            ctx.textAlign = "center"
+            ctx.textBaseline = "middle"
+            ctx.fillText(particle.content, projected.x, boxY - boxHeight / 2)
+
+            // 情感标签
+            const emotionLabel = particle.emotion || "未知"
+            ctx.font = "11px sans-serif"
+            ctx.fillStyle = particle.color
+            ctx.fillText(emotionLabel, projected.x, boxY + 15 * projected.scale)
+          }
         }
       })
 
-      // 如果没有悬停任何粒子，清除悬停状态
-      if (!foundHover && hoveredDream !== null) {
-        setHoveredDream(null)
+      // 清除悬停状态
+      if (!foundHover && hoveredDreamRef.current !== null) {
+        hoveredDreamRef.current = null
       }
 
       // 辅助函数：绘制圆角矩形
@@ -539,15 +617,17 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
 
     return () => {
       window.removeEventListener("resize", resizeCanvas)
+      canvas.removeEventListener("mousedown", handleMouseDown)
       canvas.removeEventListener("mousemove", handleMouseMove)
+      canvas.removeEventListener("mouseup", handleMouseUp)
+      canvas.removeEventListener("mouseleave", handleMouseUp)
+      canvas.removeEventListener("wheel", handleWheel)
       canvas.removeEventListener("click", handleClick)
-      // 移除悬停检测的 mousemove 监听器
-      canvas.onmousemove = null
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [dreams, onDreamClick])
+  }, [dreams, onDreamClick, handleMouseDown, handleMouseMove, handleMouseUp, handleWheel, handleClick])
 
   return (
     <div className="fixed inset-0 z-50 bg-[#030712]">
@@ -560,7 +640,7 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
       </button>
 
       {/* 提示文字 */}
-      <div className="absolute top-6 left-6 text-white/80 text-sm space-y-2">
+      <div className="absolute top-6 left-6 text-white/80 text-sm space-y-2 pointer-events-none">
         <div className="flex items-center gap-2">
           <span className="text-2xl">✨</span>
           <span className="font-semibold">梦境星云</span>
@@ -572,13 +652,20 @@ export function DreamNebula({ dreams, onClose, onDreamClick }: DreamNebulaProps)
           <span className="text-white/50">•</span>
           <span className="text-white/60">{dreams.length}个梦境</span>
         </div>
-        <p className="text-xs text-white/50 mt-1">拖动鼠标旋转 • 滚轮缩放 • 点击查看详情</p>
+        <p className="text-xs text-white/50 mt-1">
+          🖱️ 拖动旋转 • 🔄 滚轮缩放 • 👆 点击查看
+        </p>
+        {/* 缩放指示器 */}
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-white/40">缩放:</span>
+          <span className="text-white/80">{Math.round(zoomRef.current * 100)}%</span>
+        </div>
       </div>
 
       {/* 画布 */}
       <canvas
         ref={canvasRef}
-        className="w-full h-full cursor-pointer"
+        className="w-full h-full cursor-grab active:cursor-grabbing"
       />
     </div>
   )

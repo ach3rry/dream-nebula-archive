@@ -1,8 +1,9 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { Calendar, Sparkles } from "lucide-react"
+import { Calendar, Sparkles, Edit2, Trash2, Eye } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 // Mood icons with neon colors - 扩展情感图标
 const moodIcons: Record<string, { icon: string; color: string }> = {
@@ -20,11 +21,41 @@ interface DreamCardProps {
   mood: keyof typeof moodIcons
   summary: string
   index?: number
+  onDelete?: (id: number) => void
 }
 
-export function DreamCard({ id, title, date, mood, summary, index = 0 }: DreamCardProps) {
+export function DreamCard({ id, title, date, mood, summary, index = 0, onDelete }: DreamCardProps) {
   const router = useRouter()
+  const [deleting, setDeleting] = useState(false)
   const moodData = moodIcons[mood] || moodIcons.mystical
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation() // 阻止冒泡到卡片点击
+
+    if (!confirm("确定要删除这个梦境吗？")) return
+
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/dreams/${id}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) throw new Error("删除失败")
+
+      // 通知父组件刷新列表
+      onDelete?.(id)
+    } catch (error) {
+      console.error("Error deleting dream:", error)
+      alert("删除失败，请稍后重试")
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation() // 阻止冒泡到卡片点击
+    router.push(`/dreams/${id}`)
+  }
 
   return (
     <article
@@ -49,10 +80,33 @@ export function DreamCard({ id, title, date, mood, summary, index = 0 }: DreamCa
         )}
       />
 
+      {/* Quick Action Buttons - 只在 hover 时显示 */}
+      <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+        <button
+          onClick={handleEdit}
+          className="p-2 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/20 transition-all duration-300 hover:scale-110"
+          title="编辑/查看详情"
+        >
+          <Eye className="w-4 h-4 text-primary" />
+        </button>
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="p-2 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-all duration-300 hover:scale-110 disabled:opacity-50"
+          title="删除"
+        >
+          {deleting ? (
+            <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Trash2 className="w-4 h-4 text-red-400" />
+          )}
+        </button>
+      </div>
+
       {/* Card content */}
       <div className="relative">
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between mb-4 pr-20">
           <div className="flex-1">
             <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
               {title}
@@ -91,7 +145,7 @@ export function DreamCard({ id, title, date, mood, summary, index = 0 }: DreamCa
       </div>
 
       {/* Floating particles effect */}
-      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+      <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
         <span className="absolute w-1 h-1 bg-primary rounded-full animate-ping" />
         <span className="absolute w-1 h-1 bg-secondary rounded-full animate-ping" style={{ animationDelay: "0.3s", left: "10px" }} />
       </div>

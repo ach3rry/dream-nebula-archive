@@ -61,7 +61,9 @@ export async function fetchDreams(userId: number = 1): Promise<Dream[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/dreams?user_id=${userId}`)
     if (!response.ok) throw new Error('Failed to fetch dreams')
-    return await response.json()
+    const data = await response.json()
+    // 后端返回的是 { total, dreams, page, page_size } 格式
+    return data.dreams || []
   } catch (error) {
     console.error('[API Error] Failed to fetch dreams:', error)
     // 失败时回退到 mock 数据
