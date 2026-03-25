@@ -63,3 +63,4 @@ frontend/
 
 # 测试文件
 backend/test_*.py
+.vercel
