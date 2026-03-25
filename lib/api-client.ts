@@ -169,7 +169,7 @@ export async function interpretDream(
 ): Promise<DreamInterpretation> {
   if (IS_DEMO_MODE) {
     console.log('[Demo Mode] Using mock dream interpretation')
-    return await mockAnalyzeDream(dreamContent, emotionType)
+    return await mockAnalyzeDream(dreamContent, emotionType, emotionScore)
   }
 
   try {
@@ -187,7 +187,7 @@ export async function interpretDream(
   } catch (error) {
     console.error('[API Error] Failed to interpret dream:', error)
     console.log('[Fallback] Using mock dream interpretation')
-    return await mockAnalyzeDream(dreamContent, emotionType)
+    return await mockAnalyzeDream(dreamContent, emotionType, emotionScore)
   }
 }
 
