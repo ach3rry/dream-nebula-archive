@@ -35,14 +35,15 @@ for dream_id in sorted(all_interpretations.keys(), key=int):
         """Escape Chinese quotation marks and backslashes for TypeScript strings"""
         if not text:
             return ""
-        # First escape backslashes
+        # IMPORTANT: Order matters!
+        # 1. First replace Chinese quotation marks (before any backslash escaping)
+        text = text.replace('\u201c', '"')   # Left double quotation mark -> regular quote
+        text = text.replace('\u201d', '"')   # Right double quotation mark -> regular quote
+        text = text.replace('\u2018', "'")   # Left single quotation mark -> regular quote
+        text = text.replace('\u2019', "'")   # Right single quotation mark -> regular quote
+        # 2. Then escape backslashes (so existing backslashes don't cause issues)
         text = text.replace('\\', '\\\\')
-        # Then replace Chinese quotation marks (U+201C and U+201D) with escaped regular quotes
-        text = text.replace('\u201c', '\\"')  # Left double quotation mark
-        text = text.replace('\u201d', '\\"')  # Right double quotation mark
-        text = text.replace('\u2018', "\\'")  # Left single quotation mark
-        text = text.replace('\u2019', "\\'")  # Right single quotation mark
-        # Also escape regular quotes and newlines
+        # 3. Then escape regular quotes and newlines
         text = text.replace('"', '\\"')
         text = text.replace("'", "\\'")
         text = text.replace('\n', '\\n')
