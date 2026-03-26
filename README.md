@@ -172,7 +172,7 @@ async with yashandb_pool.get_connection() as conn:
 
 ### 方式一：Demo 模式（推荐，无需配置）
 
-**在线预览**: [dream-nebula.vercel.app](https://dream-nebula.vercel.app)
+**在线预览**: [dream-nebula-archive.vercel.app](https://dream-nebula-archive.vercel.app)
 
 本地运行 Demo 模式：
 
