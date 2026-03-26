@@ -151,13 +151,13 @@ export function EmotionChart({ dreams }: EmotionChartProps) {
 
   return (
     <div className="space-y-8">
-      {/* 标题 - Premium style */}
+      {/* 标题 - Premium style（移除闪烁动画） */}
       <div className={cn(
         "text-center space-y-2"
       )}>
         <h3 className={cn(
           "text-xl font-bold",
-          "bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto] animate-bg-shift bg-clip-text text-transparent"
+          "bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto] bg-clip-text text-transparent"
         )}>
           情感分布统计
         </h3>
@@ -167,7 +167,7 @@ export function EmotionChart({ dreams }: EmotionChartProps) {
         )}>
           <span className={cn(
             "inline-flex items-center justify-center w-2 h-2 rounded-full",
-            "bg-primary animate-pulse"
+            "bg-primary"
           )} />
           共 {totalDreams} 个梦境
         </p>
@@ -239,7 +239,7 @@ export function EmotionChart({ dreams }: EmotionChartProps) {
                 </span>
               </div>
 
-              {/* Progress bar - Premium style with animation */}
+              {/* Progress bar - Premium style（移除闪烁动画） */}
               <div className={cn(
                 "relative h-3 rounded-full overflow-hidden",
                 "glass-card backdrop-blur-sm border border-primary/10",
@@ -265,327 +265,273 @@ export function EmotionChart({ dreams }: EmotionChartProps) {
                   style={{
                     boxShadow: `0 0 20px ${config.glowColor}`
                   }}
-                >
-                  {/* Shimmer effect */}
-                  <motion.div
-                    className={cn(
-                      "absolute inset-0 bg-gradient-to-r",
-                      "from-white/30 via-transparent to-white/30"
-                    )}
-                    animate={{
-                      x: ["-100%", "200%"]
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "linear",
-                      delay: index * 0.2
-                    }}
-                  />
-                </motion.div>
+                />
               </div>
             </motion.div>
           )
         })}
       </div>
 
-      {/* 环形图 - Premium with enhanced texture */}
-      <motion.div
-        ref={chartRef}
-        className={cn(
-          "relative w-72 h-72 mx-auto",
-          "group/donut"
-        )}
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
-        onMouseLeave={() => setHoveredType(null)}
-      >
-        {/* 多层光晕效果 */}
-        <div className="absolute inset-0">
-          <motion.div
-            className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 blur-3xl"
-            animate={{
-              opacity: [0.3, 0.5, 0.3],
-              scale: [1, 1.1, 1]
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-          <motion.div
-            className="absolute inset-4 rounded-full bg-gradient-to-r from-secondary/10 to-primary/10 blur-2xl"
-            animate={{
-              opacity: [0.2, 0.4, 0.2],
-              scale: [1.05, 1, 1.05]
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 0.5
-            }}
-          />
+      {/* 环形图 - 意识流梦幻版 */}
+      <div className="relative flex justify-center py-8">
+        {/* 静态背景光晕 - 移除闪烁 */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-64 h-64 rounded-full bg-gradient-to-r from-purple-500/20 via-pink-400/20 to-cyan-400/20 blur-3xl" />
         </div>
 
-        <svg className="relative w-full h-full -rotate-90" viewBox="0 0 200 200">
-          <defs>
-            {/* Create gradients for each emotion */}
-            {emotionData.map(({ type }) => {
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-48 h-48 rounded-full bg-gradient-to-tr from-primary/25 via-secondary/25 to-purple-400/25 blur-2xl" />
+        </div>
+
+        <motion.div
+          ref={chartRef}
+          className={cn(
+            "relative w-72 h-72",
+            "group/donut"
+          )}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          onMouseLeave={() => setHoveredType(null)}
+        >
+          <svg className="relative w-full h-full -rotate-90" viewBox="0 0 200 200">
+            <defs>
+              {emotionData.map(({ type }) => {
+                const config = emotionConfig[type]
+                const gradientId = `gradient-${type}`
+                const glowId = `glow-${type}`
+                return (
+                  <g key={gradientId}>
+                    <radialGradient id={`glow-grad-${type}`}>
+                      <stop offset="0%" stopColor={config.fromColorRgb} stopOpacity="1" />
+                      <stop offset="100%" stopColor={config.toColorRgb} stopOpacity="0" />
+                    </radialGradient>
+                    <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor={config.fromColorRgb} stopOpacity="1" />
+                      <stop offset="50%" stopColor={config.toColorRgb} stopOpacity="1" />
+                      <stop offset="100%" stopColor={config.fromColorRgb} stopOpacity="1" />
+                    </linearGradient>
+                    <filter id={glowId} x="-100%" y="-100%" width="300%" height="300%">
+                      <feGaussianBlur stdDeviation="4" result="blur" />
+                      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
+                    </filter>
+                  </g>
+                )
+              })}
+            </defs>
+
+            {/* 背景圆环 - 模糊光晕 */}
+            <circle
+              cx="100"
+              cy="100"
+              r="72"
+              fill="none"
+              strokeWidth="16"
+              stroke="rgba(255,255,255,0.06)"
+              style={{ filter: "blur(1px)" }}
+            />
+
+            {/* 渐变段 - 流动效果 */}
+            {emotionData.map(({ type, percentage }, index) => {
               const config = emotionConfig[type]
-              const gradientId = `gradient-${type}`
+              const circumference = 2 * Math.PI * 72
+
+              // 计算每段的实际长度（只在段之间留小间隙）
+              const gapSize = 2 // 段之间的间隙大小
+              const totalGaps = emotionData.length > 1 ? emotionData.length : 0
+              const totalGapLength = totalGaps * gapSize
+              const usableCircumference = circumference - totalGapLength
+
+              const segmentLength = (percentage / 100) * usableCircumference
+              const gapLength = circumference - segmentLength
+
+              const previousPercentage = emotionData
+                .slice(0, index)
+                .reduce((sum, d) => sum + d.percentage, 0)
+
+              // 计算偏移量时考虑之前的间隙
+              const previousGaps = index > 0 ? index * gapSize : 0
+              const offsetLength = (previousPercentage / 100) * usableCircumference + previousGaps
+
+              const isHovered = hoveredType === type
+              const isDimmed = hoveredType !== null && hoveredType !== type
+
               return (
-                <g key={gradientId}>
-                  <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor={config.fromColorRgb} stopOpacity="1" />
-                    <stop offset="100%" stopColor={config.toColorRgb} stopOpacity="1" />
-                  </linearGradient>
-                  {/* Shadow filter */}
-                  <filter id={`shadow-${type}`} x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
-                    <feOffset dx="0" dy="2" result="offsetblur" />
-                    <feComponentTransfer>
-                      <feFuncA type="linear" slope="0.5" />
-                    </feComponentTransfer>
-                    <feMerge>
-                      <feMergeNode />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </g>
-              )
-            })}
-          </defs>
+                <g key={type}>
+                  {/* 外层光晕 - 移除闪烁动画 */}
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="72"
+                    fill="none"
+                    strokeWidth="24"
+                    stroke={`url(#glow-grad-${type})`}
+                    strokeDasharray={`${segmentLength} ${gapLength}`}
+                    strokeDashoffset={-offsetLength}
+                    strokeLinecap="round"
+                    style={{
+                      filter: "blur(8px)",
+                      opacity: isDimmed ? 0.05 : (isHovered ? 0.3 : 0.15),
+                    }}
+                    className="pointer-events-none"
+                  />
 
-          {/* Background circle with gradient */}
-          <circle
-            cx="100"
-            cy="100"
-            r="75"
-            fill="none"
-            strokeWidth="18"
-            stroke="url(#bg-gradient)"
-          />
-          <defs>
-            <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.1)" />
-              <stop offset="50%" stopColor="rgba(255,255,255,0.05)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0.1)" />
-            </linearGradient>
-          </defs>
-
-          {/* Gradient segments */}
-          {emotionData.map(({ type, percentage }, index) => {
-            const config = emotionConfig[type]
-            const circumference = 2 * Math.PI * 75 // ≈ 471.2
-            const segmentLength = (percentage / 100) * circumference
-            const gapLength = circumference - segmentLength
-
-            // Calculate offset from previous segments
-            const previousPercentage = emotionData
-              .slice(0, index)
-              .reduce((sum, d) => sum + d.percentage, 0)
-            const offsetLength = (previousPercentage / 100) * circumference
-
-            const isHovered = hoveredType === type
-            const isDimmed = hoveredType !== null && hoveredType !== type
-
-            return (
-              <g key={type}>
-                {/* Circle segment with enhanced effects */}
-                <motion.circle
-                  cx="100"
-                  cy="100"
-                  r="75"
-                  fill="none"
-                  strokeWidth="18"
-                  stroke={`url(#gradient-${type})`}
-                  strokeDasharray={`${segmentLength} ${gapLength}`}
-                  strokeDashoffset={-offsetLength}
-                  strokeLinecap="round"
-                  initial={{ strokeDashoffset: -offsetLength + segmentLength }}
-                  animate={{ strokeDashoffset: -offsetLength }}
-                  transition={{ duration: 1.2, delay: 0.4 + index * 0.1, ease: "easeOut" }}
-                  style={{
-                    opacity: isDimmed ? 0.15 : 0.95,
-                    filter: isHovered ? `url(#shadow-${type}) drop-shadow(0 0 12px ${config.glowColor})` : `drop-shadow(0 0 6px ${config.glowColor})`
-                  }}
-                  onMouseEnter={() => setHoveredType(type)}
-                  whileHover={{
-                    strokeWidth: 22,
-                    scale: 1.02,
-                    transformOrigin: "center"
-                  }}
-                  exit={{
-                    opacity: 0.15
-                  }}
-                  className="cursor-pointer transition-all duration-500"
-                />
-
-                {/* Hover highlight ring */}
-                {isHovered && (
+                  {/* 主圆环 - 移除闪烁动画 */}
                   <motion.circle
                     cx="100"
                     cy="100"
-                    r="88"
+                    r="72"
                     fill="none"
-                    strokeWidth="2"
-                    stroke={config.fromColorRgb}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 0.6, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.3 }}
-                    className="pointer-events-none"
+                    strokeWidth="16"
+                    stroke={`url(#gradient-${type})`}
+                    strokeDasharray={`${segmentLength} ${gapLength}`}
+                    strokeDashoffset={-offsetLength}
+                    strokeLinecap="butt"
+                    initial={{ strokeDashoffset: -offsetLength + segmentLength + gapSize }}
+                    animate={{
+                      strokeDashoffset: -offsetLength,
+                    }}
+                    transition={{
+                      strokeDashoffset: { duration: 1.5, delay: 0.2 + index * 0.1, ease: "easeOut" },
+                    }}
+                    style={{
+                      filter: isHovered ? `url(#glow-${type})` : "blur(0.5px)",
+                      opacity: isDimmed ? 0.2 : 0.9,
+                    }}
+                    onMouseEnter={() => setHoveredType(type)}
+                    whileHover={{
+                      strokeWidth: 20,
+                      scale: 1.02,
+                      transformOrigin: "center",
+                    }}
+                    className="cursor-pointer"
                   />
-                )}
-              </g>
-            )
-          })}
-        </svg>
+                </g>
+              )
+            })}
+          </svg>
 
-        {/* Center content with glass effect */}
-        <motion.div
-          className={cn(
-            "absolute inset-0 flex flex-col items-center justify-center"
-          )}
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.8, type: "spring", stiffness: 200 }}
-        >
-          <motion.div
-            className={cn(
-              "relative z-10 text-center",
-              "rounded-2xl px-8 py-6",
-              "backdrop-blur-2xl border border-white/10",
-              "bg-gradient-to-br from-white/20 via-white/10 to-white/5",
-              "shadow-2xl"
-            )}
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            style={{
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)"
-            }}
-          >
-            {/* 内部光泽层 */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-50" />
-
-            <motion.div
-              className={cn(
-                "text-5xl font-bold relative z-10",
-                "bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent"
-              )}
-              animate={{
-                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-              style={{
-                backgroundSize: "200% auto",
-                filter: "drop-shadow(0 2px 8px rgba(6, 182, 212, 0.5))"
-              }}
-            >
-              {totalDreams}
-            </motion.div>
-            <div className="text-sm text-foreground/70 mt-2 font-medium relative z-10">梦境总数</div>
-
-            {/* Hover info with animation */}
+          {/* 中心内容 - 梦幻风格（移除闪烁动画） */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
             <AnimatePresence mode="wait">
-              {hoveredType && (
+              {hoveredType ? (
                 <motion.div
-                  className="mt-4 pt-4 border-t border-white/20 relative z-10"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
+                  key="hover"
+                  className="text-center"
+                  initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  exit={{ opacity: 0, scale: 0.8, rotate: 10 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
                 >
                   <motion.div
-                    className="text-3xl mb-1"
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 0.5, repeat: 1 }}
+                    className="text-5xl mb-2 drop-shadow-2xl"
+                    whileHover={{ scale: 1.1 }}
+                    style={{
+                      filter: "drop-shadow(0 0 25px rgba(255,255,255,0.6))"
+                    }}
                   >
                     {emotionConfig[hoveredType].icon}
                   </motion.div>
-                  <div className="text-sm text-foreground/80 font-semibold">{emotionConfig[hoveredType].label}</div>
-                  <div className="text-xs text-foreground/60 mt-1">
-                    {emotionData.find(d => d.type === hoveredType)?.count || 0} 个梦境
+                  <div className="text-lg font-semibold text-white/95 tracking-wide">
+                    {emotionConfig[hoveredType].label}
+                  </div>
+                  <div className="text-sm text-white/50 mt-1 font-light">
+                    {emotionData.find(d => d.type === hoveredType)?.percentage || 0}%
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="default"
+                  className="text-center"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <div
+                    className="text-6xl font-bold text-white mb-2"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,1) 100%)",
+                      backgroundSize: "200% auto",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      filter: "drop-shadow(0 0 25px rgba(255,255,255,0.4))"
+                    }}
+                  >
+                    {totalDreams}
+                  </div>
+                  <div className="text-sm text-white/40 tracking-widest font-light">
+                    梦境总数
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
-          </motion.div>
+          </div>
         </motion.div>
-      </motion.div>
+      </div>
 
-      {/* 图例 - Premium glass style with Framer Motion */}
+      {/* 图例 - 意识流梦幻版（移除闪烁动画） */}
       <motion.div
         className={cn(
           "flex flex-wrap justify-center gap-3"
         )}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.9 }}
+        transition={{ duration: 0.6, delay: 0.5 }}
       >
-        {emotionData.map(({ type, count }, index) => {
+        {emotionData.map(({ type, count, percentage }, index) => {
           const config = emotionConfig[type]
           return (
             <motion.div
               key={type}
               className={cn(
-                "group/legend relative inline-flex items-center gap-2 px-3 py-1.5 rounded-xl",
-                "glass-card backdrop-blur-sm border border-primary/10",
+                "group/legend relative inline-flex items-center gap-3 px-5 py-2.5 rounded-full",
                 "cursor-pointer overflow-hidden"
               )}
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ duration: 0.4, delay: 1 + index * 0.08, type: "spring" }}
+              initial={{ opacity: 0, y: 15, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{
+                duration: 0.5,
+                delay: 0.6 + index * 0.08,
+                type: "spring",
+                stiffness: 200
+              }}
               whileHover={{
-                scale: 1.05,
-                y: -2,
-                transition: { type: "spring", stiffness: 400 }
+                scale: 1.08,
+                y: -3,
               }}
               whileTap={{ scale: 0.95 }}
+              onMouseEnter={() => setHoveredType(type)}
+              style={{
+                background: `linear-gradient(135deg, ${config.fromColorRgb}15 0%, ${config.toColorRgb}10 100%)`,
+                border: `1px solid ${config.fromColorRgb}30`,
+                boxShadow: `0 0 ${hoveredType === type ? '25px' : '10px'} ${config.fromColorRgb}40`,
+              }}
             >
-              {/* Glow effect */}
-              <motion.div
-                className={cn(
-                  "absolute inset-0 rounded-xl opacity-0",
-                  `bg-gradient-to-r ${config.fromColor} ${config.toColor}`,
-                  "blur-md"
-                )}
-                whileHover={{ opacity: 0.3 }}
-                transition={{ duration: 0.3 }}
-              />
-
               <motion.span
-                className={cn(
-                  "relative z-10 text-base"
-                )}
-                whileHover={{ rotate: [0, -10, 10, -10, 0], transition: { duration: 0.4 } }}
+                className="text-lg relative z-10"
+                whileHover={{ rotate: [0, -8, 8, -8, 0] }}
+                transition={{ duration: 0.5 }}
               >
                 {config.icon}
               </motion.span>
               <span className={cn(
-                "relative z-10 text-sm font-medium",
-                "text-foreground"
+                "text-sm font-medium relative z-10",
+                "text-white/90 tracking-wide"
               )}>
                 {config.label}
               </span>
-              <motion.span
+              <span
                 className={cn(
-                  "relative z-10 text-xs",
-                  "px-1.5 py-0.5 rounded-full",
-                  "bg-gradient-to-r from-primary/20 to-secondary/20",
-                  "text-primary font-medium"
+                  "text-xs font-semibold px-2.5 py-1 rounded-full relative z-10",
+                  "text-white/80"
                 )}
-                whileHover={{ scale: 1.1 }}
+                style={{
+                  background: `linear-gradient(135deg, ${config.fromColorRgb}30 0%, ${config.toColorRgb}20 100%)`,
+                }}
               >
-                {count}
-              </motion.span>
+                {percentage}%
+              </span>
             </motion.div>
           )
         })}

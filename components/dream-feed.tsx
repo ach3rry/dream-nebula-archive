@@ -3,7 +3,7 @@
 import { DreamCard } from "./dream-card"
 import { useState, useEffect, useMemo } from "react"
 import { fetchDreams, type Dream } from "@/lib/api-client"
-import { Search, Sparkles, Filter, X, ChevronLeft, ChevronRight } from "lucide-react"
+import { Search, Sparkles, Filter, X, ChevronLeft, ChevronRight, Star, SparkleIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -187,46 +187,101 @@ export function DreamFeed() {
       {/* Emotion Filter Bar */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <button
+          <motion.button
             onClick={() => setShowFilters(!showFilters)}
             className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground transition-colors"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300 }}
           >
             <Filter className="w-4 h-4" />
             <span>情感筛选</span>
             <span className="text-xs text-primary/60">
               {selectedEmotion !== "all" ? `(已选: ${selectedEmotion})` : ""}
             </span>
-          </button>
+          </motion.button>
           {selectedEmotion !== "all" && (
-            <button
+            <motion.button
               onClick={clearEmotionFilter}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1 rounded-lg hover:bg-primary/10"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               清除筛选
-            </button>
+            </motion.button>
           )}
         </div>
 
-        {showFilters && (
-          <div className="flex flex-wrap gap-2 p-4 rounded-2xl glass-card border border-primary/10">
-            {emotionFilters.map((filter) => (
-              <button
-                key={filter.key}
-                onClick={() => setSelectedEmotion(filter.key)}
-                className={cn(
-                  "px-4 py-2 rounded-xl border transition-all duration-300",
-                  "flex items-center gap-2 text-sm font-medium",
-                  selectedEmotion === filter.key
-                    ? `bg-gradient-to-r ${filter.color} border-primary/50 shadow-lg shadow-primary/20 scale-105`
-                    : "bg-transparent border-primary/20 hover:border-primary/40 hover:scale-105"
-                )}
-              >
-                <span>{filter.icon}</span>
-                <span>{filter.label}</span>
-              </button>
-            ))}
-          </div>
-        )}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-wrap gap-2 p-5 rounded-2xl glass-card border border-primary/15"
+            >
+            {emotionFilters.map((filter, index) => {
+              const isSelected = selectedEmotion === filter.key
+              return (
+                <motion.button
+                  key={filter.key}
+                  onClick={() => setSelectedEmotion(filter.key)}
+                  className={cn(
+                    "relative px-5 py-2.5 rounded-xl border overflow-hidden",
+                    "flex items-center gap-2 text-sm font-medium",
+                    isSelected
+                      ? "bg-gradient-to-r from-primary/25 to-secondary/25 border-primary/40"
+                      : "bg-white/5 border-white/10 hover:border-primary/25 hover:bg-white/10"
+                  )}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05, type: "spring", stiffness: 300 }}
+                  whileHover={{ scale: 1.08, y: -2 }}
+                  whileTap={{ scale: 0.92 }}
+                >
+                  {/* 激活状态微光 */}
+                  {isSelected && (
+                    <motion.div
+                      className="absolute inset-0 rounded-xl"
+                      animate={{
+                        opacity: [0.3, 0.6, 0.3],
+                        scale: [1, 1.05, 1],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                      style={{
+                        background: "radial-gradient(circle at center, rgba(0,245,255,0.15) 0%, transparent 70%)",
+                      }}
+                    />
+                  )}
+                  {/* 图标 */}
+                  <motion.span
+                    animate={isSelected ? {
+                      rotate: [0, -10, 10, -10, 0],
+                      scale: [1, 1.15, 1],
+                    } : {}}
+                    transition={{ duration: 0.5 }}
+                    className="text-base"
+                  >
+                    {filter.icon}
+                  </motion.span>
+                  {/* 标签 */}
+                  <span className={cn(
+                    "relative z-10",
+                    isSelected ? "text-primary" : "text-white/70"
+                  )}>
+                    {filter.label}
+                  </span>
+                </motion.button>
+              )
+            })}
+          </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Results Summary */}
@@ -343,55 +398,38 @@ export function DreamFeed() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Pagination Controls - v0.dev 风格果冻态按钮 */}
+          {/* Pagination Controls - 梦幻毛玻璃翻页 */}
           {totalPages > 1 && (
             <div className="mt-12 flex justify-center">
-              <div className="flex items-center gap-3 p-4 rounded-3xl glass-card border border-primary/10 shadow-xl shadow-primary/5">
-                {/* 上一页按钮 */}
-                <button
+              <div className="relative flex items-center gap-3 px-6 py-3 rounded-2xl overflow-hidden">
+                {/* 毛玻璃背景 */}
+                <div className="absolute inset-0 glass-card" />
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5" />
+
+                {/* 上一页 */}
+                <motion.button
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                   className={cn(
-                    "relative group p-3 rounded-2xl cursor-pointer overflow-hidden",
-                    "disabled:opacity-30 disabled:cursor-not-allowed",
-                    "hover:scale-105 active:scale-95",
-                    "transition-all duration-500 ease-out"
+                    "relative z-10 p-2.5 rounded-xl",
+                    "disabled:opacity-25 disabled:cursor-not-allowed",
+                    "bg-primary/10 hover:bg-primary/15",
+                    "border border-primary/20 hover:border-primary/30",
+                    "transition-all duration-300"
                   )}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 350,
+                    damping: 15
+                  }}
                 >
-                  {/* 渐变背景层 */}
-                  <div className={cn(
-                    "absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100",
-                    "bg-gradient-to-br from-primary/10 via-secondary/10 to-primary/10",
-                    "animate-nebula transition-opacity duration-500"
-                  )} />
-                  {/* 毛玻璃层 */}
-                  <div className={cn(
-                    "absolute inset-0 rounded-2xl",
-                    "bg-gradient-to-br from-white/5 to-white/[0.02]",
-                    "backdrop-blur-xl transition-all duration-500"
-                  )} />
-                  {/* 柔和边缘光晕 */}
-                  <div className={cn(
-                    "absolute -inset-3 rounded-3xl opacity-0 group-hover:opacity-60",
-                    "bg-gradient-to-r from-primary/20 via-transparent to-secondary/20",
-                    "blur-2xl transition-opacity duration-700"
-                  )} />
-                  {/* 内部高光 */}
-                  <div className={cn(
-                    "absolute inset-0 rounded-2xl",
-                    "bg-gradient-to-br from-white/15 via-transparent to-transparent",
-                    "opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  )} />
-                  {/* 边缘柔光 */}
-                  <div className={cn(
-                    "absolute inset-0 rounded-2xl shadow-[inset_0_2px_4px_rgba(255,255,255,0.1),inset_0_-2px_4px_rgba(0,0,0,0.1)]",
-                    "opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  )} />
-                  <ChevronLeft className="relative z-10 w-5 h-5 text-foreground/70 group-hover:text-foreground transition-colors duration-300" />
-                </button>
+                  <ChevronLeft className="w-5 h-5 text-primary/80" />
+                </motion.button>
 
-                {/* 页码按钮 */}
-                <div className="flex items-center gap-2">
+                {/* 页码 */}
+                <div className="flex items-center gap-2 z-10">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     let pageNum: number
                     if (totalPages <= 5) {
@@ -407,114 +445,81 @@ export function DreamFeed() {
                     const isActive = pageNum === currentPage
 
                     return (
-                      <button
+                      <motion.button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
                         className={cn(
-                          "relative group min-w-[52px] h-12 rounded-2xl cursor-pointer overflow-hidden",
-                          "hover:scale-105 active:scale-95 font-bold text-base",
-                          "transition-all duration-500 ease-out"
-                        )}
-                      >
-                        {/* 渐变背景层 */}
-                        <div className={cn(
-                          "absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100",
-                          "bg-gradient-to-br from-primary/10 via-secondary/10 to-primary/10",
-                          "animate-nebula transition-opacity duration-500",
-                          isActive && "opacity-100"
-                        )} />
-                        {/* 毛玻璃层 */}
-                        <div className={cn(
-                          "absolute inset-0 rounded-2xl",
+                          "relative w-11 h-11 rounded-xl overflow-hidden",
+                          "border transition-all duration-300",
                           isActive
-                            ? "bg-gradient-to-br from-primary/25 to-secondary/25"
-                            : "bg-gradient-to-br from-white/5 to-white/[0.02]",
-                          "backdrop-blur-xl transition-all duration-500"
-                        )} />
-                        {/* 柔和边缘光晕 */}
-                        <div className={cn(
-                          "absolute -inset-3 rounded-3xl opacity-0 group-hover:opacity-60",
-                          "bg-gradient-to-r from-primary/20 via-transparent to-secondary/20",
-                          "blur-2xl transition-opacity duration-700",
-                          isActive && "opacity-100"
-                        )} />
-                        {/* 内部高光 */}
-                        <div className={cn(
-                          "absolute inset-0 rounded-2xl",
-                          "bg-gradient-to-br from-white/15 via-transparent to-transparent",
-                          isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100",
-                          "transition-opacity duration-500"
-                        )} />
-                        {/* 边缘柔光 */}
-                        <div className={cn(
-                          "absolute inset-0 rounded-2xl shadow-[inset_0_2px_4px_rgba(255,255,255,0.1),inset_0_-2px_4px_rgba(0,0,0,0.1)]",
-                          isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100",
-                          "transition-opacity duration-500"
-                        )} />
-                        {/* 激活状态呼吸光晕 */}
+                            ? "bg-gradient-to-br from-primary/30 to-secondary/30 border-primary/30"
+                            : "bg-white/5 hover:bg-white/10 border-white/10"
+                        )}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        animate={isActive ? {
+                          y: [0, -2, 0],
+                        } : {}}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 15,
+                          y: {
+                            duration: 2.5,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }
+                        }}
+                      >
+                        {/* 激活状态微光 */}
                         {isActive && (
-                          <>
-                            <div className="absolute inset-0 rounded-2xl animate-pulse-glow" />
-                            <div className={cn(
-                              "absolute inset-0 rounded-2xl animate-pulse",
-                              "bg-gradient-to-r from-primary/10 to-secondary/10"
-                            )} />
-                          </>
+                          <motion.div
+                            className="absolute inset-0 rounded-xl"
+                            animate={{
+                              opacity: [0.3, 0.6, 0.3],
+                            }}
+                            transition={{
+                              duration: 3,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                            style={{
+                              background: "radial-gradient(circle at center, rgba(0,245,255,0.2) 0%, transparent 70%)",
+                            }}
+                          />
                         )}
                         <span className={cn(
-                          "relative z-10",
-                          isActive ? "text-foreground" : "text-foreground/70 group-hover:text-foreground",
-                          "transition-colors duration-300"
+                          "relative z-10 text-sm font-semibold",
+                          isActive ? "text-primary" : "text-white/60"
                         )}>
                           {pageNum}
                         </span>
-                      </button>
+                      </motion.button>
                     )
                   })}
                 </div>
 
-                {/* 下一页按钮 */}
-                <button
+                {/* 下一页 */}
+                <motion.button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
                   className={cn(
-                    "relative group p-3 rounded-2xl cursor-pointer overflow-hidden",
-                    "disabled:opacity-30 disabled:cursor-not-allowed",
-                    "hover:scale-105 active:scale-95",
-                    "transition-all duration-500 ease-out"
+                    "relative z-10 p-2.5 rounded-xl",
+                    "disabled:opacity-25 disabled:cursor-not-allowed",
+                    "bg-primary/10 hover:bg-primary/15",
+                    "border border-primary/20 hover:border-primary/30",
+                    "transition-all duration-300"
                   )}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 350,
+                    damping: 15
+                  }}
                 >
-                  {/* 渐变背景层 */}
-                  <div className={cn(
-                    "absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100",
-                    "bg-gradient-to-br from-primary/10 via-secondary/10 to-primary/10",
-                    "animate-nebula transition-opacity duration-500"
-                  )} />
-                  {/* 毛玻璃层 */}
-                  <div className={cn(
-                    "absolute inset-0 rounded-2xl",
-                    "bg-gradient-to-br from-white/5 to-white/[0.02]",
-                    "backdrop-blur-xl transition-all duration-500"
-                  )} />
-                  {/* 柔和边缘光晕 */}
-                  <div className={cn(
-                    "absolute -inset-3 rounded-3xl opacity-0 group-hover:opacity-60",
-                    "bg-gradient-to-r from-primary/20 via-transparent to-secondary/20",
-                    "blur-2xl transition-opacity duration-700"
-                  )} />
-                  {/* 内部高光 */}
-                  <div className={cn(
-                    "absolute inset-0 rounded-2xl",
-                    "bg-gradient-to-br from-white/15 via-transparent to-transparent",
-                    "opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  )} />
-                  {/* 边缘柔光 */}
-                  <div className={cn(
-                    "absolute inset-0 rounded-2xl shadow-[inset_0_2px_4px_rgba(255,255,255,0.1),inset_0_-2px_4px_rgba(0,0,0,0.1)]",
-                    "opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  )} />
-                  <ChevronRight className="relative z-10 w-5 h-5 text-foreground/70 group-hover:text-foreground transition-colors duration-300" />
-                </button>
+                  <ChevronRight className="w-5 h-5 text-primary/80" />
+                </motion.button>
               </div>
             </div>
           )}

@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation"
 import { Calendar, Tag, ArrowLeft, Edit2, Trash2 } from "lucide-react"
 import { Loader2 } from "lucide-react"
 import { DreamInterpretation } from "./dream-interpretation"
-import { DreamExport } from "./dream-export"
 import { DreamEditDialog } from "./dream-edit-dialog"
-import { DreamShare } from "./dream-share"
 import { fetchDream, deleteDream as apiDeleteDream } from "@/lib/api-client"
 
 const emotionIcons: Record<string, { icon: string; label: string; color: string; bgGradient: string }> = {
@@ -186,16 +184,6 @@ export function DreamDetailView({ dreamId }: DreamDetailViewProps) {
               </div>
 
               <div className="flex gap-2">
-                <DreamShare
-                  dreamId={parseInt(dreamId)}
-                  dreamContent={dream.content}
-                />
-                <DreamExport
-                  dreamId={parseInt(dreamId)}
-                  dreamContent={dream.content}
-                  dreamDate={createdDate}
-                  emotion={dream.emotion}
-                />
                 <button
                   onClick={() => setIsEditDialogOpen(true)}
                   className="relative group p-2.5 rounded-xl cursor-pointer overflow-hidden transition-all duration-500 ease-out hover:scale-105 active:scale-95"

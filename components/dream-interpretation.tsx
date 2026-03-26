@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { Sparkles, Cloud, Brain, Compass } from "lucide-react"
-import { DreamExport } from "./dream-export"
 import { interpretDream } from "@/lib/api-client"
 import { NebulaSkeleton } from "./nebula-skeleton"
 
@@ -149,20 +148,6 @@ export function DreamInterpretation({ dreamId, dreamContent, emotion }: Interpre
             </h3>
             <p className="text-sm text-foreground/60">AI 梦境分析报告</p>
           </div>
-
-          {/* 导出按钮 - 在解读完成后显示 */}
-          <DreamExport
-            dreamId={dreamId}
-            dreamContent={dreamContent}
-            dreamDate={new Date().toLocaleDateString("zh-CN")}
-            emotion={emotion}
-            interpretation={{
-              summary: result.summary,
-              psychological_meaning: result.psychological_meaning,
-              life_guidance: result.life_guidance,
-              mental_weather: result.mental_weather
-            }}
-          />
         </div>
 
       {/* 心灵天气预报 */}

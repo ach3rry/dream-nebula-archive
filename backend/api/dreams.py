@@ -5,6 +5,7 @@ Dream CRUD API Endpoints
 提供梦境的创建、读取、更新、删除功能
 """
 from fastapi import APIRouter, HTTPException, Query
+from starlette.responses import Response
 from typing import List, Optional
 from datetime import datetime
 import json
@@ -149,7 +150,7 @@ def create_dream(dream: DreamCreate):
             conn.close()
 
 
-@router.get("", response_model=DreamListResponse, summary="获取梦境列表")
+@router.get("", summary="获取梦境列表")
 def list_dreams(
     user_id: int = Query(..., description="用户 ID"),
     page: int = Query(1, ge=1, description="页码"),
@@ -202,11 +203,22 @@ def list_dreams(
 
         dreams = [row_to_dream(row) for row in rows]
 
-        return DreamListResponse(
+        result = DreamListResponse(
             total=len(dreams),
             dreams=dreams,
             page=page,
             page_size=page_size
+        )
+
+        # 使用 starlette Response 直接设置所有头
+        return Response(
+            content=json.dumps(result.model_dump(), ensure_ascii=False),
+            media_type="application/json",
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+                "Access-Control-Allow-Headers": "*",
+            }
         )
 
     except Exception as e:

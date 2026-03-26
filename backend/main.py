@@ -4,8 +4,7 @@ Dream Nebula Archive - Main Application Entry
 
 参赛项目：YashanDB AI 应用挑战赛
 """
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
 import logging
 
@@ -37,14 +36,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# 配置 CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Vue3 开发服务器
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# 手动添加 CORS 头的中间件
+@app.middleware("http")
+async def add_cors_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
 
 
 # 健康检查

@@ -8,8 +8,8 @@ import { mockDreams, mockInterpretations, mockAnalyzeEmotion, mockAnalyzeDream }
 // 检查是否启用 Demo 模式
 const IS_DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
 
-// 真实 API 基础 URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+// 真实 API 基础 URL - 使用相对路径通过 Next.js 代理
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 export interface EmotionAnalysis {
   emotion_type: string
@@ -62,8 +62,22 @@ export async function fetchDreams(userId: number = 1): Promise<Dream[]> {
     const response = await fetch(`${API_BASE_URL}/api/dreams?user_id=${userId}`)
     if (!response.ok) throw new Error('Failed to fetch dreams')
     const data = await response.json()
-    // 后端返回的是 { total, dreams, page, page_size } 格式
-    return data.dreams || []
+
+    // 处理两种响应格式：
+    // 1. { total, dreams, page, page_size } - 直接后端调用
+    // 2. [...] - Next.js 代理返回（可能被解析为数组）
+    if (Array.isArray(data)) {
+      // Next.js 代理直接返回数组
+      console.log('[API] Received array from proxy, length:', data.length)
+      return data
+    } else if (data && data.dreams) {
+      // 标准后端格式
+      console.log('[API] Received paginated response, total:', data.total)
+      return data.dreams
+    } else {
+      console.warn('[API] Unexpected response format:', data)
+      return []
+    }
   } catch (error) {
     console.error('[API Error] Failed to fetch dreams:', error)
     // 失败时回退到 mock 数据

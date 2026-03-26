@@ -81,22 +81,8 @@ export function StatsDashboard() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="relative">
-          {/* 外层光晕 */}
-          <motion.div
-            className="absolute inset-0 rounded-full blur-2xl"
-            animate={{
-              background: [
-                "radial-gradient(circle, rgba(6, 182, 212, 0.4) 0%, transparent 70%)",
-                "radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%)",
-                "radial-gradient(circle, rgba(6, 182, 212, 0.4) 0%, transparent 70%)"
-              ]
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-          />
+          {/* 静态光晕 */}
+          <div className="absolute inset-0 rounded-full blur-2xl bg-gradient-to-r from-primary/30 to-secondary/30" />
           {/* 旋转环 */}
           <div className="relative w-20 h-20">
             <motion.div
@@ -110,18 +96,7 @@ export function StatsDashboard() {
               transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
             />
             {/* 核心脉冲 */}
-            <motion.div
-              className="absolute inset-4 rounded-full bg-gradient-to-br from-primary/40 to-secondary/40"
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.6, 1, 0.6]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
+            <div className="absolute inset-4 rounded-full bg-gradient-to-br from-primary/40 to-secondary/40" />
           </div>
         </div>
       </div>
@@ -137,36 +112,11 @@ export function StatsDashboard() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
         >
-          {/* 外层光晕 */}
+          {/* 静态光晕 */}
           <div className="relative">
-            <motion.div
-              className="absolute inset-0 rounded-full blur-3xl"
-              animate={{
-                background: [
-                  "radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%)",
-                  "radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, transparent 70%)",
-                  "radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%)"
-                ]
-              }}
-              transition={{
-                duration: 6,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-            />
+            <div className="absolute inset-0 rounded-full blur-3xl bg-gradient-to-r from-primary/20 to-secondary/20" />
             <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center border border-primary/20 backdrop-blur-sm">
-              <motion.div
-                animate={{
-                  rotate: [0, 360],
-                  scale: [1, 1.1, 1]
-                }}
-                transition={{
-                  rotate: { duration: 20, repeat: Infinity, ease: "linear" },
-                  scale: { duration: 3, repeat: Infinity, ease: "easeInOut" }
-                }}
-              >
-                <Moon className="w-16 h-16 text-primary" />
-              </motion.div>
+              <Moon className="w-16 h-16 text-primary" />
             </div>
           </div>
           <div>
@@ -237,16 +187,12 @@ export function StatsDashboard() {
               whileHover={{ scale: 1.03, y: -5 }}
               whileTap={{ scale: 0.98 }}
             >
-              {/* 动画边框渐变 */}
-              <motion.div
-                className={cn(
-                  "absolute -inset-[2px] rounded-2xl opacity-0 group-hover:opacity-100",
-                  "bg-gradient-to-r from-primary via-secondary to-primary",
-                  "bg-[length:200%_auto] blur-md"
-                )}
-                animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              />
+              {/* 边框渐变 - 移除闪烁动画 */}
+              <div className={cn(
+                "absolute -inset-[2px] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity",
+                "bg-gradient-to-r from-primary via-secondary to-primary",
+                "bg-[length:200%_auto] blur-md"
+              )} />
 
               {/* 卡片主体 - 增强毛玻璃效果 */}
               <div className={cn(
@@ -311,12 +257,8 @@ export function StatsDashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
       >
-        {/* 外层光晕 */}
-        <motion.div
-          className="absolute -inset-[2px] rounded-2xl opacity-40 blur-sm bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto]"
-          animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-        />
+        {/* 外层光晕 - 移除闪烁 */}
+        <div className="absolute -inset-[2px] rounded-2xl opacity-30 blur-sm bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto]" />
         <div className="relative glass-card rounded-2xl p-6 border border-primary/20 backdrop-blur-xl bg-gradient-to-br from-white/10 to-white/5 overflow-hidden">
           {/* 顶部光泽层 */}
           <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -365,11 +307,7 @@ export function StatsDashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.5 }}
       >
-        <motion.div
-          className="absolute -inset-[2px] rounded-2xl opacity-30 blur-sm bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto]"
-          animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-        />
+        <div className="absolute -inset-[2px] rounded-2xl opacity-25 blur-sm bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto]" />
         <div className="relative glass-card rounded-2xl p-8 border border-primary/20 backdrop-blur-xl bg-gradient-to-br from-white/10 to-white/5 overflow-hidden">
           {/* 顶部光泽层 */}
           <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-transparent opacity-30" />
@@ -386,11 +324,7 @@ export function StatsDashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.6 }}
       >
-        <motion.div
-          className="absolute -inset-[2px] rounded-2xl opacity-30 blur-sm bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto]"
-          animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-        />
+        <div className="absolute -inset-[2px] rounded-2xl opacity-25 blur-sm bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto]" />
         <div className="relative glass-card rounded-2xl p-6 border border-primary/20 backdrop-blur-xl bg-gradient-to-br from-white/10 to-white/5 overflow-hidden">
           {/* 顶部光泽层 */}
           <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-transparent opacity-30" />
@@ -470,11 +404,7 @@ export function StatsDashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.8 }}
       >
-        <motion.div
-          className="absolute -inset-[2px] rounded-2xl opacity-30 blur-sm bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto]"
-          animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
-        />
+        <div className="absolute -inset-[2px] rounded-2xl opacity-25 blur-sm bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto]" />
         <div className="relative glass-card rounded-2xl p-6 border border-primary/20 backdrop-blur-xl bg-gradient-to-br from-white/10 to-white/5 overflow-hidden">
           {/* 顶部光泽层 */}
           <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-transparent opacity-30" />
