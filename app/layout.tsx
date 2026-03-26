@@ -1,17 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Inter, Space_Mono } from "next/font/google"
 import "./globals.css"
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-})
-
-const spaceMono = Space_Mono({
-  weight: ["400", "700"],
-  subsets: ["latin"],
-  variable: "--font-space-mono",
-})
 
 export const metadata: Metadata = {
   title: "Dream Nebula Archive | 梦境星云档案馆",
@@ -31,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body className={`${inter.variable} ${spaceMono.variable} font-sans antialiased`}>
+      <body className="font-sans antialiased">
         {children}
       </body>
     </html>

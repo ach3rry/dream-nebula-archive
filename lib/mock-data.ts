@@ -707,3 +707,102 @@ export const mockInterpretations: Record<number, MockInterpretation> = {
 
 }
 
+/**
+ * Mock 情感分析函数 - 用于 Demo 模式
+ */
+export async function mockAnalyzeEmotion(content: string): Promise<{
+  emotion_type: string
+  emotion_score: number
+  confidence: number
+  keywords?: string[]
+}> {
+  // 模拟分析延迟
+  await new Promise(resolve => setTimeout(resolve, 500))
+
+  // 根据内容关键词返回模拟情感分析
+  const lowerContent = content.toLowerCase()
+
+  let emotionType = '平静'
+  let emotionScore = 0.5
+  const keywords: string[] = []
+
+  // 简单的关键词匹配
+  if (lowerContent.includes('快乐') || lowerContent.includes('开心') || lowerContent.includes('喜悦')) {
+    emotionType = '愉悦'
+    emotionScore = 0.8
+    keywords.push('快乐', '积极')
+  } else if (lowerContent.includes('悲伤') || lowerContent.includes('哭泣') || lowerContent.includes('痛苦')) {
+    emotionType = '悲伤'
+    emotionScore = 0.3
+    keywords.push('情感', '释放')
+  } else if (lowerContent.includes('恐惧') || lowerContent.includes('害怕') || lowerContent.includes('紧张')) {
+    emotionType = '恐惧'
+    emotionScore = 0.2
+    keywords.push('焦虑', '不安')
+  } else if (lowerContent.includes('愤怒') || lowerContent.includes('生气') || lowerContent.includes('不满')) {
+    emotionType = '愤怒'
+    emotionScore = 0.4
+    keywords.push('情绪', '冲突')
+  }
+
+  // 提取一些关键词
+  const keywordMatches = content.match(/[\u4e00-\u9fa5]{2,4}/g)
+  if (keywordMatches) {
+    keywords.push(...keywordMatches.slice(0, 3))
+  }
+
+  return {
+    emotion_type: emotionType,
+    emotion_score: emotionScore,
+    confidence: 0.85 + Math.random() * 0.1,
+    keywords: keywords.slice(0, 5)
+  }
+}
+
+/**
+ * Mock 梦境解读函数 - 用于 Demo 模式
+ */
+export async function mockAnalyzeDream(
+  dreamContent: string,
+  emotionType: string,
+  emotionScore: number
+): Promise<{
+  summary: string
+  symbols: Array<{ symbol: string; meaning: string; mood: string }>
+  psychological_meaning: string
+  subconscious_message: string
+  life_guidance: string
+  mental_weather: { forecast: string; temp: string; advice: string }
+}> {
+  // 模拟分析延迟
+  await new Promise(resolve => setTimeout(resolve, 1000))
+
+  // 提取一些关键词作为象征
+  const symbolMatches = dreamContent.match(/[\u4e00-\u9fa5]{2,4}/g) || []
+  const symbols = symbolMatches.slice(0, 3).map(word => ({
+    symbol: word,
+    meaning: `梦境中的${word}象征`,
+    mood: emotionType
+  }))
+
+  // 根据情感类型生成不同的解读
+  const moodAdvice: Record<string, { forecast: string; temp: string; advice: string }> = {
+    '愉悦': { forecast: '晴朗', temp: '26°C', advice: '心情愉悦，适合社交' },
+    '平静': { forecast: '晴朗', temp: '24°C', advice: '内心平静，适合深度思考' },
+    '悲伤': { forecast: '小雨', temp: '18°C', advice: '需要情感疏导，建议独处' },
+    '恐惧': { forecast: '多云', temp: '20°C', advice: '情绪紧张，建议放松' },
+    '愤怒': { forecast: '雷阵雨', temp: '22°C', advice: '情绪激动，建议冷静' }
+  }
+
+  const weather = moodAdvice[emotionType] || moodAdvice['平静']
+
+  return {
+    summary: `在${emotionType}的情感基调中，${dreamContent.slice(0, 20)}...这个梦境揭示了内心深处的某种渴望或担忧。`,
+    symbols,
+    psychological_meaning: `从荣格心理学视角看，这个梦境反映了你的${emotionType}状态。梦境中的意象可能与潜意识中的情感体验相关联，暗示着内心正在处理某种情绪或心理需求。`,
+    subconscious_message: `你的潜意识正在通过梦境与你沟通。${emotionType}的情感状态表明，内心可能正在寻求某种平衡或整合。梦境中的符号和场景都是潜意识试图传递信息的方式。`,
+    life_guidance: `建议在清醒状态下关注自己的${emotionType}情绪。可以通过写日记、冥想或与信任的人交流来进一步探索梦境的含义。保持开放和好奇的态度，让梦境的智慧为你的生活提供指引。`,
+    mental_weather: weather
+  }
+}
+
