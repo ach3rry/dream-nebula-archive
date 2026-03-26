@@ -31,20 +31,38 @@ for dream_id in sorted(all_interpretations.keys(), key=int):
     if interp is None:
         continue
 
+    def escape_for_ts(text):
+        """Escape Chinese quotation marks and backslashes for TypeScript strings"""
+        if not text:
+            return ""
+        # First escape backslashes
+        text = text.replace('\\', '\\\\')
+        # Then replace Chinese quotation marks (U+201C and U+201D) with escaped regular quotes
+        text = text.replace('\u201c', '\\"')  # Left double quotation mark
+        text = text.replace('\u201d', '\\"')  # Right double quotation mark
+        text = text.replace('\u2018', "\\'")  # Left single quotation mark
+        text = text.replace('\u2019', "\\'")  # Right single quotation mark
+        # Also escape regular quotes and newlines
+        text = text.replace('"', '\\"')
+        text = text.replace("'", "\\'")
+        text = text.replace('\n', '\\n')
+        text = text.replace('\r', '')
+        return text
+
     ts_code += f"  {dream_id}: {{\n"
-    ts_code += f"    summary: \"{interp['summary'].replace('\"', '\\\"')}\",\n"
+    ts_code += f"    summary: \"{escape_for_ts(interp['summary'])}\",\n"
 
     # symbols
     ts_code += "    symbols: [\n"
     for symbol in interp.get('symbols', []):
-        ts_code += f"      {{ symbol: \"{symbol['symbol']}\", meaning: \"{symbol['meaning'].replace('\"', '\\\"')}\", mood: \"{symbol['mood']}\" }},\n"
+        ts_code += f"      {{ symbol: \"{escape_for_ts(symbol['symbol'])}\", meaning: \"{escape_for_ts(symbol['meaning'])}\", mood: \"{escape_for_ts(symbol['mood'])}\" }},\n"
     ts_code += "    ],\n"
 
     # 其他字段
-    ts_code += f"    psychological_meaning: \"{interp['psychological_meaning'].replace('\"', '\\\"')}\",\n"
-    ts_code += f"    subconscious_message: \"{interp['subconscious_message'].replace('\"', '\\\"')}\",\n"
-    ts_code += f"    life_guidance: \"{interp['life_guidance'].replace('\"', '\\\"')}\",\n"
-    ts_code += f"    mental_weather: {{ forecast: \"{interp['mental_weather']['forecast']}\", temp: \"{interp['mental_weather']['temp']}\", advice: \"{interp['mental_weather']['advice'].replace('\"', '\\\"')}\" }}\n"
+    ts_code += f"    psychological_meaning: \"{escape_for_ts(interp['psychological_meaning'])}\",\n"
+    ts_code += f"    subconscious_message: \"{escape_for_ts(interp['subconscious_message'])}\",\n"
+    ts_code += f"    life_guidance: \"{escape_for_ts(interp['life_guidance'])}\",\n"
+    ts_code += f"    mental_weather: {{ forecast: \"{escape_for_ts(interp['mental_weather']['forecast'])}\", temp: \"{escape_for_ts(interp['mental_weather']['temp'])}\", advice: \"{escape_for_ts(interp['mental_weather']['advice'])}\" }}\n"
     ts_code += "  },\n\n"
 
 ts_code += "}\n"
