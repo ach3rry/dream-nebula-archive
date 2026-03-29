@@ -55,18 +55,15 @@ def create_dream(dream: DreamCreate):
 
     创建后会自动进行 AI 情感分析
     """
-    from database.connection import get_config
+    from database.connection import get_connection_pool
     import yaspy
 
-    config = get_config()
+    pool = get_connection_pool()
     conn = None
 
     try:
-        conn = yaspy.connect(
-            user=config.user,
-            password=config.password,
-            dsn=config.dsn
-        )
+        # 从连接池获取连接
+        conn = pool.acquire()
         cursor = conn.cursor()
 
         # 插入梦境记录（不使用 RETURNING）
@@ -147,7 +144,8 @@ def create_dream(dream: DreamCreate):
         raise HTTPException(status_code=500, detail=f"创建梦境失败: {str(e)}")
     finally:
         if conn:
-            conn.close()
+            # 释放连接回连接池
+            pool.release(conn)
 
 
 @router.get("", summary="获取梦境列表")
@@ -162,18 +160,15 @@ def list_dreams(
 
     支持按情感类型筛选
     """
-    from database.connection import get_config
+    from database.connection import get_connection_pool
     import yaspy
 
-    config = get_config()
+    pool = get_connection_pool()
     conn = None
 
     try:
-        conn = yaspy.connect(
-            user=config.user,
-            password=config.password,
-            dsn=config.dsn
-        )
+        # 从连接池获取连接
+        conn = pool.acquire()
         cursor = conn.cursor()
 
         # 简化查询 - 获取所有用户梦境
@@ -225,7 +220,8 @@ def list_dreams(
         raise HTTPException(status_code=500, detail=f"获取梦境列表失败: {str(e)}")
     finally:
         if conn:
-            conn.close()
+            # 释放连接回连接池
+            pool.release(conn)
 
 
 @router.get("/{dream_id}", response_model=DreamResponse, summary="获取梦境详情")
@@ -235,18 +231,15 @@ def get_dream(
     """
     获取单个梦境的详细信息
     """
-    from database.connection import get_config
+    from database.connection import get_connection_pool
     import yaspy
 
-    config = get_config()
+    pool = get_connection_pool()
     conn = None
 
     try:
-        conn = yaspy.connect(
-            user=config.user,
-            password=config.password,
-            dsn=config.dsn
-        )
+        # 从连接池获取连接
+        conn = pool.acquire()
         cursor = conn.cursor()
 
         # 查询梦境
@@ -288,7 +281,8 @@ def get_dream(
         raise HTTPException(status_code=500, detail=f"获取梦境详情失败: {str(e)}")
     finally:
         if conn:
-            conn.close()
+            # 释放连接回连接池
+            pool.release(conn)
 
 
 @router.put("/{dream_id}", response_model=DreamResponse, summary="更新梦境")
@@ -301,18 +295,15 @@ def update_dream(
 
     只能更新 content 和 is_private 字段
     """
-    from database.connection import get_config
+    from database.connection import get_connection_pool
     import yaspy
 
-    config = get_config()
+    pool = get_connection_pool()
     conn = None
 
     try:
-        conn = yaspy.connect(
-            user=config.user,
-            password=config.password,
-            dsn=config.dsn
-        )
+        # 从连接池获取连接
+        conn = pool.acquire()
         cursor = conn.cursor()
 
         # 检查梦境是否存在
@@ -367,7 +358,8 @@ def update_dream(
         raise HTTPException(status_code=500, detail=f"更新梦境失败: {str(e)}")
     finally:
         if conn:
-            conn.close()
+            # 释放连接回连接池
+            pool.release(conn)
 
 
 @router.delete("/{dream_id}", summary="删除梦境")
@@ -379,18 +371,15 @@ def delete_dream(
 
     由于有外键约束 ON DELETE CASCADE，关联的标签也会被自动删除
     """
-    from database.connection import get_config
+    from database.connection import get_connection_pool
     import yaspy
 
-    config = get_config()
+    pool = get_connection_pool()
     conn = None
 
     try:
-        conn = yaspy.connect(
-            user=config.user,
-            password=config.password,
-            dsn=config.dsn
-        )
+        # 从连接池获取连接
+        conn = pool.acquire()
         cursor = conn.cursor()
 
         # 检查梦境是否存在
@@ -414,4 +403,5 @@ def delete_dream(
         raise HTTPException(status_code=500, detail=f"删除梦境失败: {str(e)}")
     finally:
         if conn:
-            conn.close()
+            # 释放连接回连接池
+            pool.release(conn)
