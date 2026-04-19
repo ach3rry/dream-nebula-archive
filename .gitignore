@@ -15,6 +15,7 @@ build/
 # FastAPI
 .env
 .env.local
+.env.production
 
 # Node
 node_modules/
@@ -63,4 +64,26 @@ frontend/
 
 # 测试文件
 backend/test_*.py
-.vercel
+backend/test_output.txt
+backend/*_output.txt
+
+# 开发辅助脚本（不提交到参赛版本）
+backend/generate_*.py
+backend/insert_*.py
+backend/check_*.py
+backend/export_*.py
+backend/fix_*.py
+backend/merge_*.py
+backend/remove_*.py
+backend/update_*.py
+
+# 开发数据文件（不提交）
+backend/generated_*.json
+backend/interpretations_*.json
+
+# Render 部署副本（与 backend 重复）
+backend-render/
+
+# 根目录开发脚本
+fix_quotes.py
+dev.log
